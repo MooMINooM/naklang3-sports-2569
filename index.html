@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#101d30">
+  <meta name="theme-color" content="#0d201d">
   <title>กีฬานักเรียน นากลาง 3 · ตารางและผลการแข่งขัน</title>
   <link rel="stylesheet" href="viewer.css">
   <script type="module" src="viewer.js"></script>
@@ -11,29 +11,35 @@
 <body>
   <header class="site-header">
     <div class="shell header-inner">
-      <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">๓</span><span>สนามกลาง<small>กีฬานักเรียน นากลาง 3</small></span></a>
-      <nav class="main-nav" aria-label="เมนูผู้ชม">
-        <button type="button" data-view="schedule" aria-current="page">โปรแกรมแข่ง</button>
-        <button type="button" data-view="results">ผลและอันดับ</button>
-        <button type="button" data-view="venues">โรงเรียนและสนาม</button>
-      </nav>
+      <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">๓</span><span>สนามกลาง นากลาง 3</span></a>
       <a class="admin-link" href="admin.html">สำหรับผู้จัด</a>
     </div>
   </header>
   <main>
     <section class="hero" aria-labelledby="event-title">
       <div class="shell hero-inner">
-        <p>ปีการศึกษา 2569</p>
-        <h1 id="event-title">กีฬานักเรียน<br><em>นากลาง 3</em></h1>
-        <div class="hero-links"><a href="#schedule">ดูโปรแกรมแข่ง <span aria-hidden="true">↓</span></a><a href="#results">ดูผลการแข่งขัน</a></div>
+        <div class="event">
+          <p>ปีการศึกษา 2569</p>
+          <h1 id="event-title">กีฬานักเรียน <em>นากลาง 3</em></h1>
+        </div>
+        <div id="featured" class="featured" hidden></div>
       </div>
     </section>
-    <div class="shell competition">
-      <div class="connection">
+    <div class="competition-nav">
+      <div class="shell nav-inner">
+        <nav class="main-nav" aria-label="เมนูผู้ชม">
+          <a href="#schedule" aria-current="page">โปรแกรมแข่ง</a>
+          <a href="#results">ผลและอันดับ</a>
+          <a href="#venues">โรงเรียนและสนาม</a>
+        </nav>
         <p class="sync" id="sync" role="status">กำลังโหลดข้อมูล</p>
-        <button id="reload" class="control-button" type="button" hidden>ลองเชื่อมต่อใหม่</button>
       </div>
-      <p id="connection-error" class="load-error" role="alert" hidden></p>
+    </div>
+    <div class="shell competition">
+      <div id="connection-error" class="load-error" hidden>
+        <p id="error-message" role="alert"></p>
+        <button id="reload" class="control-button" type="button">ลองเชื่อมต่อใหม่</button>
+      </div>
       <div id="content"><p class="empty">กำลังอ่านข้อมูลการแข่งขัน…</p></div>
     </div>
   </main>
