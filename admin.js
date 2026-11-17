@@ -237,10 +237,10 @@ function renderDraw() {
   const draw = data.draws.find(item => item.key === drawFields.event.value);
   if (!draw) return;
   const joint = ['football', 'volleyball'].includes(draw.sport) ? ['บ้านหนองด้วง–ซำขอนแก่น'] : [];
-  byId('schools').innerHTML = data.schools.concat(joint).map(name => '<option value="' + esc(name) + '"></option>').join('');
+  byId('draw-schools').innerHTML = data.schools.concat(joint).map(name => '<option value="' + esc(name) + '"></option>').join('');
   byId('draw-slots').innerHTML = draw.slots.map((slot, index) =>
     '<label>ทีม ' + (index + 1) + (slot.length === 1 ? '' : ' · สาย ' + slot[0] + ' (' + slot + ')') +
-    ' <input maxlength="100" name="' + slot + '" list="schools" value="' + esc(draw.teams[slot]) + '"></label>').join('');
+    ' <input maxlength="100" name="' + slot + '" list="draw-schools" value="' + esc(draw.teams[slot]) + '"></label>').join('');
   drawFields.tieOrder.value = draw.tieOrder;
   byId('draw-tie').hidden = draw.level === 'middle';
   status('draw-status', '');
@@ -264,7 +264,7 @@ drawForm.addEventListener('submit', async event => {
   busy = save.disabled = drawFields.event.disabled = true;
   status('draw-status', 'กำลังบันทึกผลจับสลาก…');
   try {
-    const teams = Object.fromEntries(draw.slots.map(slot => [slot, drawFields[slot].value]));
+    const teams = Object.fromEntries(draw.slots.map(slot => [slot, drawFields.namedItem(slot).value]));
     await saveDraw(key, {key: draw.key, teams, tieOrder: drawFields.tieOrder.value});
     data = await readSports(key);
     render();

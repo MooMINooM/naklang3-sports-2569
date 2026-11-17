@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
   <link rel="stylesheet" href="admin.css?v=20261117-bracket">
-  <script type="module" src="admin.js?v=20261117-bracket"></script>
+  <script type="module" src="admin.js?v=20261117-draw-entry"></script>
 </head>
 <body>
   <header class="top">
@@ -81,6 +81,7 @@
       <h2>กรอกผลจับสลาก</h2>
       <label>รายการแข่งขัน <select name="event" required></select></label>
       <div id="draw-slots" class="form-grid"></div>
+      <datalist id="draw-schools"></datalist>
       <label id="draw-tie">ลำดับตัดสินเมื่อสถิติเท่ากัน <input name="tieOrder" placeholder="A1, B2, C1" maxlength="80" aria-describedby="draw-tie-help">
         <small id="draw-tie-help">ใช้เมื่อกรรมการตัดสินแล้ว ใส่รหัสทีมจากอันดับสูงไปต่ำตามผลตัดสิน</small>
       </label>
