@@ -3,15 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0d201d">
+  <meta name="theme-color" content="#dff4ff">
   <title>กีฬานักเรียน นากลาง 3 · ตารางและผลการแข่งขัน</title>
-  <link rel="stylesheet" href="viewer.css?v=2c2def3">
-  <script type="module" src="viewer.js?v=20261117-bracket"></script>
+  <link rel="stylesheet" href="viewer.css?v=20261117-festival">
+  <script type="module" src="viewer.js?v=20261117-festival"></script>
 </head>
 <body>
   <header class="site-header">
     <div class="shell header-inner">
-      <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">๓</span><span>สนามกลาง นากลาง 3</span></a>
+      <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">🏆</span><span>สนามกลาง นากลาง 3<small>กีฬานักเรียน ปีการศึกษา 2569</small></span></a>
+      <nav class="main-nav" aria-label="เมนูผู้ชม">
+        <a href="#home" aria-current="page"><span aria-hidden="true">⌂</span> หน้าแรก</a>
+        <a href="#schedule"><span aria-hidden="true">▦</span> โปรแกรมแข่ง</a>
+        <a href="#results"><span aria-hidden="true">🏅</span> ผลและอันดับ</a>
+        <a href="#venues"><span aria-hidden="true">🏫</span> โรงเรียนและสนาม</a>
+      </nav>
       <a class="admin-link" href="admin.html">สำหรับผู้จัด</a>
     </div>
   </header>
@@ -19,23 +25,12 @@
     <section class="hero" aria-labelledby="event-title">
       <div class="shell hero-inner">
         <div class="event">
-          <p>ปีการศึกษา 2569</p>
-          <h1 id="event-title">กีฬานักเรียน <em>นากลาง 3</em></h1>
+          <h1 id="event-title">รายงานผลการแข่งขัน<em>กีฬานักเรียน นากลาง 3</em></h1>
+          <p>ศูนย์เครือข่ายคุณภาพการศึกษานากลาง 3</p>
         </div>
-        <div id="featured" class="featured" hidden></div>
       </div>
     </section>
-    <div class="competition-nav">
-      <div class="shell nav-inner">
-        <nav class="main-nav" aria-label="เมนูผู้ชม">
-          <a href="#schedule" aria-current="page">โปรแกรมแข่ง</a>
-          <a href="#results">ผลและอันดับ</a>
-          <a href="#venues">โรงเรียนและสนาม</a>
-        </nav>
-        <p class="sync" id="sync" role="status">กำลังโหลดข้อมูล</p>
-      </div>
-    </div>
-    <div class="shell competition">
+    <div class="shell competition" id="competition">
       <div id="connection-error" class="load-error" hidden>
         <p id="error-message" role="alert"></p>
         <button id="reload" class="control-button" type="button">ลองเชื่อมต่อใหม่</button>
@@ -43,6 +38,6 @@
       <div id="content"><p class="empty">กำลังอ่านข้อมูลการแข่งขัน…</p></div>
     </div>
   </main>
-  <footer class="shell footer">ศูนย์เครือข่ายคุณภาพการศึกษานากลาง 3</footer>
+  <footer><div class="shell footer"><span>🏆 กีฬานักเรียน นากลาง 3 · ปีการศึกษา 2569</span><p class="sync" id="sync" role="status">กำลังโหลดข้อมูล</p></div></footer>
 </body>
 </html>

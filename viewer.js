@@ -5,20 +5,21 @@ import {
 } from './sports-data.js?v=20261117-bracket';
 
 const content = document.querySelector('#content');
-const featured = document.querySelector('#featured');
+const competition = document.querySelector('#competition');
 const status = document.querySelector('#sync');
 const error = document.querySelector('#connection-error');
 const errorMessage = document.querySelector('#error-message');
 const reload = document.querySelector('#reload');
-const routes = ['schedule', 'results', 'venues'];
-const navigation = document.querySelector('.competition-nav');
+const routes = ['home', 'schedule', 'results', 'venues'];
+const sportIcons = {football: '⚽', volleyball: '🏐', takraw: '🟠', petanque: '⚪'};
+const navigation = document.querySelector('.main-nav');
 const filters = {day: 1, sport: '', level: '', type: '', resultSport: ''};
 let data;
 let loading = false;
 
 function view() {
   const hash = location.hash.slice(1);
-  return routes.includes(hash) ? hash : 'schedule';
+  return routes.includes(hash) ? hash : 'home';
 }
 
 function select(id, label, values, placeholder) {
@@ -37,7 +38,7 @@ function matchCard(match, {showDay = false} = {}) {
     : '<span class="versus">พบ</span>';
 
   return '<article class="match-card ' + esc(match.sport) + '">' +
-    '<div class="match-meta"><b>' + esc(SPORTS[match.sport]) + '</b><span>' +
+    '<div class="match-meta"><b><span aria-hidden="true">' + sportIcons[match.sport] + '</span> ' + esc(SPORTS[match.sport]) + '</b><span>' +
     esc(LEVELS[match.level]) + ' · ' + esc(TYPES[match.type]) + '</span></div>' +
     '<div class="matchup"><strong class="home">' + esc(match.home) + '</strong>' + score +
     '<strong class="away">' + esc(match.away) + '</strong></div>' +
@@ -47,25 +48,46 @@ function matchCard(match, {showDay = false} = {}) {
     '</span></span></div></article>';
 }
 
-function renderFeatured() {
-  const matches = ordered(data.matches);
-  const latest = matches.findLast(hasScore);
-  const match = latest || matches[0];
-  featured.hidden = !match;
-  if (!match) return;
-
-  const target = latest ? 'results' : 'schedule';
-  featured.innerHTML = '<div class="feature-heading"><h2>' + (latest ? 'ผลล่าสุด' : 'คู่แรกตามโปรแกรม') +
-    '</h2><a href="#' + target + '" data-feature="' + (latest ? '' : match.day) +
-    '">' + (latest ? 'ดูผลทั้งหมด' : 'ดูตารางแข่ง') +
-    '</a></div>' + matchCard(match, {showDay: true});
-}
-
 function sportButtons(id) {
   return '<div class="sport-filters" role="group" aria-label="กรองตามกีฬา">' +
     Object.entries({'': 'ทุกกีฬา', ...SPORTS}).map(([sport, label]) =>
       '<button type="button" class="control-button" data-sport-filter="' + id + '" data-sport="' + sport +
-      '" aria-pressed="' + (filters[id] === sport) + '">' + label + '</button>').join('') + '</div>';
+      '" aria-pressed="' + (filters[id] === sport) + '">' +
+      (sport ? '<span aria-hidden="true">' + sportIcons[sport] + '</span> ' : '') + label + '</button>').join('') + '</div>';
+}
+
+function dayButtons() {
+  return '<div class="days" role="group" aria-label="วันแข่งขัน">' + Object.entries(DAYS).map(([day, label]) =>
+    '<button class="control-button" type="button" data-day="' + day + '" aria-pressed="' +
+    (Number(day) === filters.day) + '">' + label + '</button>').join('') + '</div>';
+}
+
+function overview() {
+  const matches = ordered(data.matches);
+  const scored = matches.filter(hasScore);
+  const selected = matches.filter(match => !filters.sport || match.sport === filters.sport);
+  const upcoming = selected.filter(match => match.day === filters.day && !hasScore(match));
+  const latest = selected.filter(hasScore).reverse().slice(0, 3);
+  const cards = [
+    ['📋', 'โปรแกรม ' + DAYS[filters.day], matches.filter(match => match.day === filters.day).length, 'คู่'],
+    ['🏆', 'ประกาศผลแล้ว', scored.length, 'คู่'],
+    ['🏫', 'โรงเรียนในเครือข่าย', data.schools.length, 'โรงเรียน'],
+    ['🏐', 'ชนิดกีฬา', new Set(matches.map(match => match.sport)).size, 'ชนิด'],
+  ].map(([icon, label, count, unit]) =>
+    '<div class="metric"><span class="metric-icon" aria-hidden="true">' + icon + '</span><div>' +
+    '<div class="metric-label">' + label + '</div><strong>' + count + '</strong> <small>' + unit + '</small></div></div>').join('');
+  const list = (matches, empty, showDay) => matches.length ?
+    '<div class="overview-list">' + matches.map(match => matchCard(match, {showDay})).join('') + '</div>' :
+    '<p class="empty">' + empty + '</p>';
+  return '<div class="metrics" aria-label="สรุปการแข่งขัน">' + cards + '</div>' +
+    '<div class="overview-filters"><span>เลือกชนิดกีฬา</span>' + sportButtons('sport') + '</div>' +
+    '<div class="overview-grid">' +
+    '<section class="overview-panel" aria-labelledby="upcoming-title"><div class="section-heading">' +
+    '<h2 id="upcoming-title"><span aria-hidden="true">📋</span> โปรแกรมการแข่งขัน</h2><a href="#schedule">ดูทั้งหมด <span aria-hidden="true">›</span></a></div>' +
+    dayButtons() + list(upcoming.slice(0, 3), 'ไม่มีคู่ที่รอแข่งขันตามตัวกรองนี้') + '</section>' +
+    '<section class="overview-panel" aria-labelledby="latest-title"><div class="section-heading">' +
+    '<h2 id="latest-title"><span aria-hidden="true">🏆</span> ผลการแข่งขันล่าสุด</h2><a href="#results" data-results-link>ดูทั้งหมด <span aria-hidden="true">›</span></a></div>' +
+    list(latest, 'ยังไม่มีผลการแข่งขันที่เผยแพร่', true) + '</section></div>';
 }
 
 function schedule() {
@@ -73,15 +95,12 @@ function schedule() {
     (!filters.sport || filters.sport === match.sport) &&
     (!filters.level || filters.level === match.level) &&
     (!filters.type || filters.type === match.type)));
-  const dayButtons = Object.entries(DAYS).map(([day, label]) =>
-    '<button class="control-button" type="button" data-day="' + day + '" aria-pressed="' +
-    (Number(day) === filters.day) + '">' + label + '</button>').join('');
   const cards = matches.length ? '<div class="fixture-grid">' + matches.map(match => matchCard(match)).join('') + '</div>' :
     '<p class="empty">' + (data.matches.length ? 'ไม่มีคู่แข่งขันตามตัวกรองนี้' : 'ยังไม่มีโปรแกรมแข่งที่เผยแพร่') + '</p>';
 
   return '<section aria-labelledby="schedule-title"><div class="section-heading">' +
     '<h2 id="schedule-title">โปรแกรมแข่ง</h2><small>' + DAYS[filters.day] + ' · ' + matches.length + ' คู่</small></div>' +
-    '<div class="filter-panel"><div class="days" role="group" aria-label="วันแข่งขัน">' + dayButtons + '</div>' +
+    '<div class="filter-panel">' + dayButtons() +
     sportButtons('sport') + '<div class="filters">' +
     select('level', 'รุ่น', LEVELS, 'ทุกรุ่น') + select('type', 'ประเภท', TYPES, 'ทุกประเภท') +
     '</div></div>' + cards + '</section>';
@@ -126,12 +145,13 @@ function venues() {
 
 function render() {
   const route = view();
-  document.querySelectorAll('.main-nav a').forEach(link => {
+  navigation.querySelectorAll('a').forEach(link => {
     if (link.hash === '#' + route) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
 
-  if (data) content.innerHTML = {schedule, results, venues}[route]();
+  document.body.dataset.view = route;
+  if (data) content.innerHTML = {home: overview, schedule, results, venues}[route]();
 }
 
 async function refresh() {
@@ -145,10 +165,7 @@ async function refresh() {
     status.dataset.state = 'connected';
     status.textContent = 'อัปเดต ' + new Date().toLocaleTimeString('th-TH', {hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok'}) + ' น.';
     error.hidden = true;
-    if (changed) {
-      renderFeatured();
-      render();
-    }
+    if (changed) render();
   } catch (failure) {
     status.dataset.state = 'failed';
     status.textContent = 'เชื่อมต่อข้อมูลไม่ได้';
@@ -160,23 +177,8 @@ async function refresh() {
   }
 }
 
-function showContent() {
-  navigation.scrollIntoView({block: 'start'});
-}
-
-featured.addEventListener('click', event => {
-  const link = event.target.closest('[data-feature]');
-  if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-  if (link.hash === '#results') filters.resultSport = '';
-  else Object.assign(filters, {day: Number(link.dataset.feature), sport: '', level: '', type: ''});
-  if (location.hash === link.hash) {
-    event.preventDefault();
-    render();
-    showContent();
-  }
-  navigation.querySelector('a[href="' + link.hash + '"]').focus({preventScroll: true});
-});
 content.addEventListener('click', event => {
+  if (event.target.closest('[data-results-link]')) filters.resultSport = filters.sport;
   const day = event.target.closest('[data-day]');
   const sport = event.target.closest('[data-sport-filter]');
   const button = day || sport;
@@ -197,7 +199,8 @@ content.addEventListener('change', event => {
 });
 window.addEventListener('hashchange', () => {
   render();
-  if (routes.includes(location.hash.slice(1))) showContent();
+  if (view() === 'home') window.scrollTo(0, 0);
+  else competition.scrollIntoView({block: 'start'});
 });
 reload.addEventListener('click', refresh);
 render();
