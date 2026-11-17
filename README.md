@@ -4,14 +4,15 @@
 
 ## เปิดเว็บไซต์
 
-- [GitHub Pages](https://moominoom.github.io/naklang3-sports-2569/) เปิดหน้าตารางแข่ง ผลและอันดับ และแบบฟอร์มผู้จัดด้วยข้อมูลตัวอย่าง การแก้ไขในหน้านี้เก็บไว้ในเบราว์เซอร์เครื่องที่ใช้งาน
+- [เว็บแข่งขันจริง](https://script.google.com/macros/s/AKfycbygr4nA_tO-Y6fvSbFBSUtqW_X20lJsJZcDAM_vbrB1sePwfKT7bLLZyaDZJ3DJN_OrNw/exec) อ่านตารางและผลจาก Google Sheets ผู้จัดเข้าเมนู **ตั้งค่าระบบ** เพื่อกรอกรหัสก่อนลงตารางและบันทึกผล
+- [GitHub Pages](https://moominoom.github.io/naklang3-sports-2569/) มีปุ่มเข้าเว็บแข่งขันจริงและหน้าทดลอง การแก้ไขข้อมูลตัวอย่างเก็บไว้ในเบราว์เซอร์เครื่องที่ใช้งาน
 - [ชุดติดตั้ง Google Sheets](setup/naklang3-google-sheets.zip) ใช้เปิดระบบจริงผ่าน Google Apps Script โดยให้ผู้ชมเห็นเฉพาะคู่ที่ผู้จัดเปิดเผยแพร่ และให้ผู้จัดบันทึกตารางกับคะแนนลงชีต
 
 ## เปิดใช้งานกับ Google Sheets
 
 1. สร้าง Google Sheets เปล่า แล้วเปิด **ส่วนขยาย → Apps Script**
 2. วาง [Code.gs](apps-script/sports-center/Code.gs) ในไฟล์สคริปต์ แล้วเพิ่มไฟล์ HTML ชื่อ `Index` และวาง [Index.html](apps-script/sports-center/Index.html)
-3. รัน `setupSports_` จากตัวแก้ไข Apps Script เพื่อสร้างแท็บ Matches, Fields, Schools และ Settings จากนั้นตั้ง `SPORTS_ADMIN_KEY` ใน Script properties ตาม [คู่มือติดตั้ง](apps-script/sports-center/README.md)
+3. สร้างแท็บ Matches, Fields, Schools และ Settings แล้วตั้ง `SPORTS_ADMIN_KEY` ใน Script properties ตาม [คู่มือติดตั้ง](apps-script/sports-center/README.md)
 4. เผยแพร่เป็น Web app แล้วใช้ URL `/exec` เพื่อเปิดระบบที่บันทึกข้อมูลลงชีตจริง ทดสอบหน้าผู้ชมและบันทึกผลในโหมดผู้จัดก่อนประกาศลิงก์
 
 คู่มือชุดนี้ใช้กับ **ชีตใหม่** เนื่องจากคอลัมน์ของ Matches ต่างจากระบบ API เดิม หากมีข้อมูลในชีตเดิม ให้ย้ายข้อมูลตามคอลัมน์ของระบบใหม่ก่อนเปิดใช้งาน

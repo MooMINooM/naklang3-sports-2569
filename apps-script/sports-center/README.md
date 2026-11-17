@@ -2,7 +2,7 @@
 
 1. สร้าง Google Sheets เปล่า แล้วเปิด **ส่วนขยาย → Apps Script**
 2. นำเนื้อหา `Code.gs` มาแทนโค้ดเดิม เพิ่มไฟล์ HTML ชื่อ `Index` และวางเนื้อหา `Index.html`
-3. ใน Apps Script เลือก `setupSports_` แล้วกด Run และอนุญาตให้เข้าถึงชีต พร้อมตรวจว่ามีแท็บ Matches, Fields, Schools และ Settings
+3. ที่ท้ายไฟล์ `Code.gs` เพิ่ม `function initializeSports() { setupSports_(); }` ชั่วคราวแล้วบันทึก เลือก `initializeSports` จากตัวแก้ไข กด Run และอนุญาตให้เข้าถึงชีต ตรวจว่ามีแท็บ Matches, Fields, Schools และ Settings แล้วลบฟังก์ชัน `initializeSports` และบันทึกก่อนเผยแพร่เว็บ
 4. เปิด Project Settings → Script properties แล้วเพิ่ม `SPORTS_ADMIN_KEY` เป็นรหัสสุ่มยาวอย่างน้อย 20 ตัวอักษร ส่งรหัสให้เฉพาะผู้จัด และเก็บไฟล์ชีตเป็นส่วนตัวเพื่อให้ผู้ชมอ่านผ่านเว็บเท่านั้น
 5. เลือก Deploy → New deployment → Web app → Execute as Me แล้วเลือกผู้เข้าถึงตามกลุ่มเป้าหมายที่บัญชี Google อนุญาต นำ URL ที่ลงท้ายด้วย `/exec` ไปใช้ เมื่อแก้โค้ดให้อัปเดตเวอร์ชันของ deployment เดิม
 
