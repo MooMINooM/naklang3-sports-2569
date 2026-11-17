@@ -2,7 +2,7 @@ import {readSports} from './sports-api.js';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, standings,
-} from './sports-data.js';
+} from './sports-data.js?v=20261117-schedule';
 
 const content = document.querySelector('#content');
 const featured = document.querySelector('#featured');
@@ -28,7 +28,7 @@ function select(id, label, values, placeholder) {
 
 function matchCard(match, {showDay = false} = {}) {
   const scored = hasScore(match);
-  const end = clock(minutes(match.start) + duration(match.sport, match.level));
+  const end = clock(minutes(match.start) + duration(match, data.settings));
   const timing = showDay ? DAYS[match.day] + ' · ' + match.start + ' น.' : match.start + '–' + end + ' น.';
   const stage = STAGES[match.stage] + (match.group ? ' · กลุ่ม ' + match.group : '');
   const score = scored

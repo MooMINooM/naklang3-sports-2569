@@ -2,7 +2,7 @@ import {readSports, saveMatch} from './sports-api.js';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, blank,
-} from './sports-data.js';
+} from './sports-data.js?v=20261117-schedule';
 
 const byId = id => document.getElementById(id);
 const login = byId('login-form');
@@ -47,7 +47,7 @@ function render() {
   }
 
   const rows = matches.map(match => {
-    const end = clock(minutes(match.start) + duration(match.sport, match.level));
+    const end = clock(minutes(match.start) + duration(match, data.settings));
     const score = hasScore(match) ? esc(match.homeScore) + ' – ' + esc(match.awayScore) : 'รอผล';
     return '<tr><td><strong>' + DAYS[match.day] + '</strong><small>' + esc(match.start) + '–' + end +
       '</small></td><td><strong>' + esc(match.home) + ' พบ ' + esc(match.away) + '</strong><small>' +

@@ -9,7 +9,12 @@ const entities = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&
 
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => entities[char]);
 export const hasScore = match => match.homeScore !== '' && match.awayScore !== '';
-export const duration = (sport, level) => sport === 'football' ? durations.football[level] : durations[sport];
+export function duration({sport, level, stage}, settings) {
+  const groupMinutes = Number(settings.volleyballUpperGroupMinutes);
+  if (sport === 'volleyball' && level === 'upper' && stage === 'group' &&
+      Number.isInteger(groupMinutes) && groupMinutes > 0) return groupMinutes;
+  return sport === 'football' ? durations.football[level] : durations[sport];
+}
 export const minutes = time => {
   const [hour, minute] = time.split(':').map(Number);
   return hour * 60 + minute;

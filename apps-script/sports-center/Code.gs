@@ -11,15 +11,21 @@ const FIELDS=[
 ].map(([id,name,sport,levels,type=''])=>({id,name,sport,levels,type}));
 const SCHOOLS=['บ้านท่าอุทัย','บ้านหนองด้วง','ซำขอนแก่น','บ้านโนนสวรรค์','บ้านโนนไหม','บ้านโนนสวาท','บ้านหนองกรุงศรี','บ้านภูพระโนนผักหวาน','บ้านโนนม่วง','บ้านโนนเมือง'];
 const DURATION={football:{kg:25,lower:35,upper:41,middle:45},volleyball:90,takraw:30,petanque:90};
-const duration=(s,l)=>typeof DURATION[s]==='number'?DURATION[s]:DURATION[s]?.[l];
+function duration(match, settings){
+ const {sport,level,stage}=match;
+ const groupMinutes=Number(settings.volleyballUpperGroupMinutes);
+ if(sport==='volleyball'&&level==='upper'&&stage==='group'&&Number.isInteger(groupMinutes)&&groupMinutes>0)return groupMinutes;
+ return typeof DURATION[sport]==='number'?DURATION[sport]:DURATION[sport]?.[level];
+}
 const minutes=s=>Number(s.split(':')[0])*60+Number(s.split(':')[1]);
 const clock=n=>[Math.floor(n/60),n%60].map(x=>String(x).padStart(2,'0')).join(':');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function check(m,all,fields,settings){
- const len=duration(m.sport,m.level),f=fields.find(x=>x.id===m.field);
+ const len=duration(m,settings),f=fields.find(x=>x.id===m.field);
  if(!DAYS.includes(m.day)||!Number.isInteger(len)||!TYPES[m.type]||!STAGES[m.stage]||!/^([01]\d|2[0-3]):[0-5]\d$/.test(m.start))return 'วัน เวลา หรือรายการแข่งขันไม่ถูกต้อง';
  const a=minutes(m.start), b=a+len;
- if(a<minutes(m.day===1?settings.minDay1:settings.minOther)||b>minutes(settings.end))return 'เวลาคู่นี้อยู่นอกช่วงแข่งขัน';
+ const end=m.day===4?(settings.endDay4||settings.end):settings.end;
+ if(a<minutes(m.day===1?settings.minDay1:settings.minOther)||b>minutes(end))return 'เวลาคู่นี้อยู่นอกช่วงแข่งขัน';
  const conversion=(f?.id==='F2'||f?.id==='F3')&&Number(settings.convertDay)>0;
  const at=conversion?Number(settings.convertDay)*1440+minutes(settings.convertTime):Infinity;
  const t=m.day*1440+a;
@@ -32,7 +38,7 @@ function check(m,all,fields,settings){
    const same=n.level===m.level&&n.type===m.type, sameSport=n.sport===m.sport;
    if(same&&sameSport&&m.stage===n.stage&&['group','league'].includes(m.stage)&&[n.home,n.away].includes(m.home)&&[n.home,n.away].includes(m.away))return 'มีคู่แข่งขันนี้ในรอบเดียวกันแล้ว';
    if(Number(n.day)!==m.day)continue;
-   const c=minutes(n.start),d=c+duration(n.sport,n.level);
+   const c=minutes(n.start),d=c+duration(n,settings);
    const anchored=same&&['football','volleyball'].includes(m.sport)&&['football','volleyball'].includes(n.sport);
    const repeat=same&&sameSport&&[n.home,n.away].some(team=>team===m.home||team===m.away);
    if(n.field===m.field&&a<d&&c<b)return 'สนามมีคิวชนกับ '+n.home+' พบ '+n.away;
@@ -42,7 +48,7 @@ function check(m,all,fields,settings){
 }
 const COLUMNS=['id','day','start','sport','level','type','field','home','away','stage','group','homeScore','awayScore','published'];
 const FIELD_COLUMNS=['id','name','sport','levels','type'];
-const DEFAULT_SETTINGS={minDay1:'10:15',minOther:'08:00',end:'17:30',convertDay:'',convertTime:''};
+const DEFAULT_SETTINGS={minDay1:'10:15',minOther:'08:00',end:'17:30',convertDay:'',convertTime:'',endDay4:'',volleyballUpperGroupMinutes:''};
 
 function doGet(e){
  const bridgeId=e && e.parameter && e.parameter.bridge;
