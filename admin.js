@@ -1,4 +1,4 @@
-import {readSports, saveMatch, saveDraw} from './sports-api.js?v=20261117-bracket';
+import {readSports, saveMatch, saveDraw, saveTeamNumbers} from './sports-api.js?v=20261117-team-numbers';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, blank,
@@ -17,6 +17,9 @@ const sportFilter = byId('sport-filter');
 const drawDialog = byId('draw-dialog');
 const drawForm = byId('draw-form');
 const drawFields = drawForm.elements;
+const numbersDialog = byId('team-numbers-dialog');
+const numbersForm = byId('team-numbers-form');
+const teamNumbers = Array.from({length: 10}, (_, i) => String(i + 1));
 const managedFields = ['sport', 'level', 'type', 'stage', 'group'];
 const publishedFilter = byId('published-filter');
 let data = blank;
@@ -38,7 +41,8 @@ function render() {
   workspace.hidden = !key;
   if (!key) return;
 
-  byId('open-draw').disabled = !data.draws?.length;
+  byId('open-team-numbers').disabled = data.formatVersion < 4 || !data.teamNumbers;
+  byId('open-draw').disabled = !data.draws?.some(draw => draw.level !== 'middle');
   const publishedCount = data.matches.filter(match => match.published).length;
   byId('summary').textContent = data.matches.length + ' คู่ · เผยแพร่แล้ว ' + publishedCount + ' คู่';
   const matches = ordered(data.matches.filter(match =>
@@ -228,7 +232,7 @@ function updateScoreHint(tieWinner = fields.tieWinner.value) {
 }
 
 function drawOptions() {
-  return Object.fromEntries((data.draws || []).map(draw => [
+  return Object.fromEntries((data.draws || []).filter(draw => draw.level !== 'middle').map(draw => [
     draw.key, SPORTS[draw.sport] + ' · ' + LEVELS[draw.level] + TYPES[draw.type],
   ]));
 }
@@ -236,13 +240,8 @@ function drawOptions() {
 function renderDraw() {
   const draw = data.draws.find(item => item.key === drawFields.event.value);
   if (!draw) return;
-  const joint = ['football', 'volleyball'].includes(draw.sport) ? ['บ้านหนองด้วง–ซำขอนแก่น'] : [];
-  byId('draw-schools').innerHTML = data.schools.concat(joint).map(name => '<option value="' + esc(name) + '"></option>').join('');
-  byId('draw-slots').innerHTML = draw.slots.map((slot, index) =>
-    '<label>ทีม ' + (index + 1) + (slot.length === 1 ? '' : ' · สาย ' + slot[0] + ' (' + slot + ')') +
-    ' <input maxlength="100" name="' + slot + '" list="draw-schools" value="' + esc(draw.teams[slot]) + '"></label>').join('');
   drawFields.tieOrder.value = draw.tieOrder;
-  byId('draw-tie').hidden = draw.level === 'middle';
+
   status('draw-status', '');
 }
 
@@ -262,17 +261,54 @@ drawForm.addEventListener('submit', async event => {
   if (!draw) return;
   const save = byId('save-draw');
   busy = save.disabled = drawFields.event.disabled = true;
-  status('draw-status', 'กำลังบันทึกผลจับสลาก…');
+  status('draw-status', 'กำลังบันทึกลำดับ…');
   try {
-    const teams = Object.fromEntries(draw.slots.map(slot => [slot, drawFields.namedItem(slot).value]));
-    await saveDraw(key, {key: draw.key, teams, tieOrder: drawFields.tieOrder.value});
+    await saveDraw(key, {key: draw.key, tieOrder: drawFields.tieOrder.value});
     data = await readSports(key);
     render();
     renderDraw();
-    status('draw-status', 'บันทึกผลจับสลากแล้ว');
+    status('draw-status', 'บันทึกลำดับแล้ว');
   } catch (error) {
     status('draw-status', error.message, true);
   } finally {
     busy = save.disabled = drawFields.event.disabled = false;
+  }
+});
+
+function renderTeamNumbers() {
+  byId('number-schools').innerHTML = data.schools.concat('บ้านหนองด้วง–ซำขอนแก่น')
+    .map(name => '<option value="' + esc(name) + '"></option>').join('');
+  byId('team-number-fields').innerHTML = teamNumbers.map(number =>
+    '<label>ทีม ' + number + ' <input name="team-' + number + '" maxlength="100" list="number-schools" value="' +
+    esc(data.teamNumbers[number] || '') + '"></label>').join('');
+  status('team-numbers-status', '');
+}
+
+byId('open-team-numbers').addEventListener('click', () => {
+  if (busy || !data.teamNumbers) return;
+  renderTeamNumbers();
+  numbersDialog.showModal();
+});
+byId('close-team-numbers').addEventListener('click', () => { if (!busy) numbersDialog.close(); });
+numbersDialog.addEventListener('cancel', event => { if (busy) event.preventDefault(); });
+numbersForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (busy || !key) return;
+  const save = byId('save-team-numbers');
+  busy = save.disabled = true;
+  status('team-numbers-status', 'กำลังบันทึกเลขทีม…');
+  try {
+    const values = new FormData(numbersForm);
+    const teams = Object.fromEntries(teamNumbers.map(number => [number, values.get('team-' + number)]));
+    const previous = Object.fromEntries(teamNumbers.map(number => [number, data.teamNumbers[number] || '']));
+    await saveTeamNumbers(key, {teams, previous});
+    data = await readSports(key);
+    render();
+    renderTeamNumbers();
+    status('team-numbers-status', 'บันทึกเลขทีมโรงเรียนแล้ว');
+  } catch (error) {
+    status('team-numbers-status', error.message, true);
+  } finally {
+    busy = save.disabled = false;
   }
 });

@@ -30,6 +30,8 @@ if (topWindow !== window) {
       reply.saveSportsMatch(message.key, message.match);
     } else if (message.action === 'saveDraw') {
       reply.saveSportsDraw(message.key, message.draw);
+    } else if (message.action === 'saveTeamNumbers') {
+      reply.saveTeamNumbers(message.key, message.teams);
     }
   });
 

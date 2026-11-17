@@ -69,6 +69,7 @@ function setupSports_(){
  book.setSpreadsheetTimeZone('Asia/Bangkok');
  createTable_(book,'Matches',COLUMNS,[]);
  createTable_(book,'Roster',ROSTER_COLUMNS,[]);
+ createTable_(book,'TeamNumbers',TEAM_COLUMNS,[]);
  createTable_(book,'Fields',FIELD_COLUMNS,FIELDS.map(f=>FIELD_COLUMNS.map(k=>f[k])));
  createTable_(book,'Schools',['name'],SCHOOLS.map(x=>[x]));
  createTable_(book,'Settings',['key','value'],Object.entries(DEFAULT_SETTINGS));
@@ -119,9 +120,11 @@ function getSportsData(key){
  const canEdit=authorized_(key);
  const book=book_();
  const data=readSports_(book);
- const competition=competition_(data.matches.filter(x=>canEdit||x.published),roster_(book),canEdit);
+ const teamNumbers=teamNumbers_(book);
+ const roster=numberedRoster_(data.matches,roster_(book),teamNumbers);
+ const competition=competition_(data.matches.filter(x=>canEdit||x.published),roster,canEdit);
  data.fields=data.fields.map(({_row,...f})=>f);
- return {...data,...competition,canEdit,formatVersion:3};
+ return {...data,...competition,canEdit,formatVersion:4,...(canEdit?{teamNumbers:teamNumbers||{}}:{})};
 }
 
 function saveSportsMatch(key,input){
@@ -136,7 +139,7 @@ function saveSportsMatch(key,input){
    m.tieWinner=input.tieWinner||'';
    const prior=matches.find(x=>x.id===m.id);
    if(m.id&&!prior)throw new Error('ไม่พบคู่ที่ต้องการแก้ไข');
-   if(prior&&managed_(prior)&&['sport','level','type','stage','group','home','away'].some(k=>m[k]!==prior[k]))throw new Error('แก้ชื่อทีมจากหน้าบันทึกผลจับสลาก');
+   if(prior&&managed_(prior)&&['sport','level','type','stage','group','home','away'].some(k=>m[k]!==prior[k]))throw new Error('แก้ชื่อทีมจากหน้ากำหนดเลขทีมโรงเรียน');
    const tiedKnockout=scored_(m)&&m.homeScore===m.awayScore&&['semi','third','final'].includes(m.stage);
    if(tiedKnockout&&!['home','away'].includes(m.tieWinner))throw new Error('เลือกผู้ชนะจากการตัดสินกรณีคะแนนเท่ากัน');
    if(!tiedKnockout)m.tieWinner='';
@@ -144,11 +147,14 @@ function saveSportsMatch(key,input){
    if(error)throw new Error(error);
    m.id=m.id||Utilities.getUuid();
    const roster=roster_(book);
+   const teamNumbers=teamNumbers_(book);
    const event=matches.filter(row=>eventKey_(row)===eventKey_(m));
    const updated=event.filter(row=>row.id!==m.id).concat(m);
-   const derived=competition_(updated,roster,true).matches.find(row=>row.id===m.id);
+   const priorRoster=numberedRoster_(event,roster,teamNumbers);
+   const nextRoster=numberedRoster_(updated,roster,teamNumbers);
+   const derived=competition_(updated,nextRoster,true).matches.find(row=>row.id===m.id);
    if(scored_(m)&&!derived.ready)throw new Error('ต้องทราบทีมแข่งขันทั้งสองฝั่งก่อนบันทึกผล');
-   checkDependencies_(event,updated,roster,roster);
+   checkDependencies_(event,updated,priorRoster,nextRoster);
    const row=COLUMNS.map(k=>m[k]);
    const sheet=book.getSheetByName('Matches');
    sheet.getRange(prior?prior._row:sheet.getLastRow()+1,1,1,row.length).setValues([row]);
@@ -159,6 +165,8 @@ function saveSportsMatch(key,input){
 
 const ROSTER_SLOTS=['A1','A2','A3','A4','B1','B2','B3','C1','C2','C3','1','2','3','4'];
 const ROSTER_COLUMNS=['event',...ROSTER_SLOTS,'tieOrder'];
+const TEAM_COLUMNS=['number','school'];
+const TEAM_NUMBERS=Array.from({length:10},(_,i)=>String(i+1));
 const SEMI_LABELS=['แชมป์สายตามประกบ¹','รองแชมป์สายผลงานดีที่สุด','แชมป์สายที่เหลือ 1','แชมป์สายที่เหลือ 2'];
 const eventKey_=m=>[m.sport,m.level,m.type].join(':');
 
@@ -228,21 +236,50 @@ function seedGroups_(matches,draw){
  return {wildcard,opponent:champions[opponentIndex],others:champions.filter((_,i)=>i!==opponentIndex)};
 }
 
-function competition_(matches,roster,canEdit){
- const events=new Map(),resolved=new Map(),draws=[],qualifiers=[];
+function events_(matches){
+ const events=new Map();
  for(const m of matches){
    const k=eventKey_(m);
    if(!events.has(k))events.set(k,[]);
    events.get(k).push(m);
  }
+ return events;
+}
+
+function slots_(event){
+ const used=new Set(event.flatMap(m=>[slotOf_(m.home),slotOf_(m.away)]));
+ return ROSTER_SLOTS.filter(slot=>used.has(slot));
+}
+
+function teamNumbers_(book){
+ const sheet=book.getSheetByName('TeamNumbers');
+ return sheet?Object.fromEntries(rows_(sheet,TEAM_COLUMNS).map(row=>[String(row.number),String(row.school)])):null;
+}
+
+function numberedRoster_(matches,roster,teamNumbers){
+ if(!teamNumbers)return roster;
+ const result=new Map();
+ for(const [key,event] of events_(matches)){
+   const slots=slots_(event);
+   if(slots.length>TEAM_NUMBERS.length)throw new Error('รายการมีเลขทีมเกินจำนวนที่กำหนด');
+   const numbers=Object.fromEntries(slots.map((slot,i)=>[slot,TEAM_NUMBERS[i]]));
+   const names=Object.fromEntries(slots.map(slot=>[slot,teamNumbers[numbers[slot]]||'']));
+   result.set(key,{...roster.get(key),...names,numbers});
+ }
+ return result;
+}
+
+function competition_(matches,roster,canEdit){
+ const events=events_(matches),resolved=new Map(),draws=[],qualifiers=[];
  for(const [key,event] of events){
    const draw=roster.get(key)||{};
-   const slots=ROSTER_SLOTS.filter(slot=>event.some(m=>[m.home,m.away].some(n=>slotOf_(n)===slot)));
+   const slots=slots_(event);
    const {sport,level,type}=event[0];
    const seeds=seedGroups_(event,draw);
    const named=label=>{const slot=slotOf_(label);return slot?draw[slot]||'':label;};
-   if(canEdit&&slots.length)draws.push({key,sport,level,type,slots,teams:Object.fromEntries(slots.map(slot=>[slot,draw[slot]||''])),tieOrder:String(draw.tieOrder||'')});
-   if(seeds.wildcard)qualifiers.push({sport,level,type,group:seeds.wildcard.group,team:named(seeds.wildcard.label)||seeds.wildcard.label});
+   const display=label=>{const number=draw.numbers?.[slotOf_(label)];return number?'ทีม '+number:label;};
+   if(canEdit&&slots.length)draws.push({key,sport,level,type,slots,numbers:draw.numbers||{},teams:Object.fromEntries(slots.map(slot=>[slot,draw[slot]||''])),tieOrder:String(draw.tieOrder||'')});
+   if(seeds.wildcard)qualifiers.push({sport,level,type,group:seeds.wildcard.group,team:named(seeds.wildcard.label)||display(seeds.wildcard.label)});
    else if(seeds.pendingTie)qualifiers.push({sport,level,type,pendingTie:true});
    const semiTeams=seeds.wildcard?[seeds.opponent,seeds.wildcard,...seeds.others].map(seed=>named(seed.label)):[];
    function participant(label){
@@ -262,7 +299,7 @@ function competition_(matches,roster,canEdit){
      const ready=Boolean(home&&away);
      const winnerSide=ready?resultSide_(m):'';
      const {_row,...match}=m;
-     resolved.set(m.id,{...match,home:home||m.home,away:away||m.away,ready,winnerSide,
+     resolved.set(m.id,{...match,home:home||display(m.home),away:away||display(m.away),ready,winnerSide,
        ...(canEdit?{rawHome:m.home,rawAway:m.away,managed:managed_(m)}:{})});
    }
  }
@@ -285,22 +322,52 @@ function saveSportsDraw(key,input){
    const event=matches.filter(m=>eventKey_(m)===input?.key);
    const draw=competition_(event,roster,true).draws[0];
    if(!draw)throw new Error('ไม่พบรายการจับสลาก');
-   const proposed={};
-   for(const slot of draw.slots){
-     const name=input.teams?.[slot];
-     if(typeof name!=='string'||name.length>100||/^[=+\-@]/.test(name.trim())||slotOf_(name.trim())||bracketSource_(name.trim()))throw new Error('ชื่อทีมไม่ถูกต้อง');
-     proposed[slot]=name.trim();
+   const proposed={...roster.get(draw.key)};
+   const teamNumbers=teamNumbers_(book);
+   if(teamNumbers&&input.teams)throw new Error('กรุณาโหลดหน้าแอดมินใหม่เพื่อใช้ทะเบียนเลขทีมโรงเรียน');
+   if(!teamNumbers){
+     for(const slot of draw.slots)proposed[slot]=validateTeamName_(input.teams?.[slot]);
+     const names=draw.slots.map(slot=>proposed[slot]).filter(Boolean);
+     if(new Set(names).size!==names.length)throw new Error('โรงเรียนหรือทีมเดียวกันมีได้หนึ่งช่องต่อรายการ');
    }
-   const names=Object.values(proposed).filter(Boolean);
-   if(new Set(names).size!==names.length)throw new Error('โรงเรียนหรือทีมเดียวกันมีได้หนึ่งช่องต่อรายการ');
    const tieOrder=String(input.tieOrder||'').toUpperCase().split(/[\s,]+/).filter(Boolean);
    if(!tieOrder.every(slot=>draw.slots.includes(slot))||new Set(tieOrder).size!==tieOrder.length)throw new Error('กรอกรหัสทีมสำหรับตัดสินอันดับให้ถูกต้องและไม่ซ้ำ');
    proposed.tieOrder=tieOrder.join(',');
-   checkDependencies_(event,event,roster,new Map(roster).set(draw.key,proposed));
+   checkDependencies_(event,event,numberedRoster_(event,roster,teamNumbers),
+     numberedRoster_(event,new Map(roster).set(draw.key,proposed),teamNumbers));
    createTable_(book,'Roster',ROSTER_COLUMNS,[]);
    const sheet=book.getSheetByName('Roster');
    const row=roster.get(draw.key)?._row||sheet.getLastRow()+1;
    sheet.getRange(row,1,1,ROSTER_COLUMNS.length).setValues([[draw.key,...ROSTER_COLUMNS.slice(1).map(k=>proposed[k]||'')]]);
+   SpreadsheetApp.flush();
+   return true;
+ }finally{lock.releaseLock();}
+}
+
+function validateTeamName_(value){
+ if(typeof value!=='string'||value.length>100)throw new Error('ชื่อทีมไม่ถูกต้อง');
+ const name=value.trim();
+ if(/^[=+\-@]/.test(name)||/^ทีม\s+\d+$/.test(name)||slotOf_(name)||bracketSource_(name))throw new Error('ชื่อทีมไม่ถูกต้อง');
+ return name;
+}
+
+function saveTeamNumbers(key,input){
+ if(!authorized_(key))throw new Error('ต้องใช้รหัสผู้จัดที่ถูกต้อง');
+ const lock=LockService.getScriptLock();
+ lock.waitLock(10000);
+ try{
+   const book=book_();
+   const {matches}=readSports_(book);
+   const roster=roster_(book);
+   const existing=teamNumbers_(book);
+   if(!existing)throw new Error('ยังไม่ได้สร้างทะเบียนเลขทีม');
+   if(TEAM_NUMBERS.some(number=>(existing[number]||'')!==input?.previous?.[number]))throw new Error('มีการแก้ทะเบียนเลขทีมแล้ว กรุณาโหลดข้อมูลใหม่');
+   const next=Object.fromEntries(TEAM_NUMBERS.map(number=>[number,validateTeamName_(input.teams?.[number])]));
+   const names=Object.values(next).filter(Boolean);
+   if(new Set(names).size!==names.length)throw new Error('ชื่อโรงเรียนหรือทีมต้องไม่ซ้ำกัน');
+   checkDependencies_(matches,matches,numberedRoster_(matches,roster,existing),numberedRoster_(matches,roster,next));
+   book.getSheetByName('TeamNumbers').getRange(2,1,TEAM_NUMBERS.length,2)
+     .setValues(TEAM_NUMBERS.map(number=>[Number(number),next[number]]));
    SpreadsheetApp.flush();
    return true;
  }finally{lock.releaseLock();}

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
   <link rel="stylesheet" href="admin.css?v=20261117-bracket">
-  <script type="module" src="admin.js?v=20261117-draw-entry"></script>
+  <script type="module" src="admin.js?v=20261117-team-numbers"></script>
 </head>
 <body>
   <header class="top">
@@ -29,7 +29,8 @@
         <div class="actions">
           <button type="button" id="refresh">โหลดข้อมูลใหม่</button>
           <button type="button" id="logout">ออกจากระบบ</button>
-          <button type="button" id="open-draw">กรอกผลจับสลาก</button>
+          <button type="button" id="open-team-numbers">กำหนดเลขทีมโรงเรียน</button>
+          <button type="button" id="open-draw">ตัดสินอันดับเมื่อเสมอ</button>
           <button type="button" id="new-match" class="primary">เพิ่มคู่แข่งขัน</button>
         </div>
       </div>
@@ -78,17 +79,28 @@
   </dialog>
   <dialog id="draw-dialog">
     <form id="draw-form">
-      <h2>กรอกผลจับสลาก</h2>
+      <h2>ตัดสินอันดับเมื่อสถิติเท่ากัน</h2>
       <label>รายการแข่งขัน <select name="event" required></select></label>
-      <div id="draw-slots" class="form-grid"></div>
-      <datalist id="draw-schools"></datalist>
       <label id="draw-tie">ลำดับตัดสินเมื่อสถิติเท่ากัน <input name="tieOrder" placeholder="A1, B2, C1" maxlength="80" aria-describedby="draw-tie-help">
         <small id="draw-tie-help">ใช้เมื่อกรรมการตัดสินแล้ว ใส่รหัสทีมจากอันดับสูงไปต่ำตามผลตัดสิน</small>
       </label>
       <p id="draw-status" class="status" role="status"></p>
       <div class="actions form-actions">
         <button type="button" id="close-draw">ปิด</button>
-        <button type="submit" id="save-draw" class="primary">บันทึกผลจับสลาก</button>
+        <button type="submit" id="save-draw" class="primary">บันทึกลำดับ</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="team-numbers-dialog">
+    <form id="team-numbers-form">
+      <h2>กำหนดเลขทีมโรงเรียน</h2>
+      <p>กรอกชื่อครั้งเดียว เลขเดียวกันใช้ชื่อเดียวกันในทุกกีฬาและทุกรุ่น</p>
+      <div id="team-number-fields" class="form-grid"></div>
+      <datalist id="number-schools"></datalist>
+      <p id="team-numbers-status" class="status" role="status"></p>
+      <div class="actions form-actions">
+        <button type="button" id="close-team-numbers">ปิด</button>
+        <button type="submit" id="save-team-numbers" class="primary">บันทึกเลขทีม</button>
       </div>
     </form>
   </dialog>
