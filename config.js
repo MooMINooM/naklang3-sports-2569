@@ -1,3 +1,6 @@
-// ใส่ URL ที่ได้จาก Google Apps Script Web App (ลงท้าย /exec) เท่านั้น
-// อย่าใส่รหัสผ่านผู้ดูแลในไฟล์สาธารณะนี้
-window.NAKLANG_CONFIG = { apiUrl: '', refreshMs: 60000 };
+// Google Apps Script Web App URL (public reader / authenticated writer)
+// ห้ามเก็บรหัสผ่านผู้ดูแลในไฟล์นี้หรือไฟล์สาธารณะอื่น
+window.NAKLANG_CONFIG = {
+  apiUrl: 'https://script.google.com/macros/s/AKfycbxevvfFtleIpVyzK76V3WaoZo77KZ86fg42D9WyEGYknbbkmEPuf6qo15DkFIUH5L2i/exec',
+  refreshMs: 60000
+};
