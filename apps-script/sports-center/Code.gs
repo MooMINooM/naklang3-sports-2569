@@ -44,7 +44,13 @@ const COLUMNS=['id','day','start','sport','level','type','field','home','away','
 const FIELD_COLUMNS=['id','name','sport','levels','type'];
 const DEFAULT_SETTINGS={minDay1:'10:15',minOther:'08:00',end:'17:30',convertDay:'',convertTime:''};
 
-function doGet(){
+function doGet(e){
+ const bridgeId=e && e.parameter && e.parameter.bridge;
+ if(bridgeId && /^[a-f0-9]{32}$/.test(bridgeId)){
+   const bridge=HtmlService.createTemplateFromFile('Bridge');
+   bridge.bridgeId=bridgeId;
+   return bridge.evaluate().setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+ }
  return HtmlService.createHtmlOutputFromFile('Index')
    .setTitle('สนามกลาง · กีฬานักเรียน นากลาง 3')
    .addMetaTag('viewport','width=device-width, initial-scale=1');

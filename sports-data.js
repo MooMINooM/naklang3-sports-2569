@@ -1,0 +1,56 @@
+export const SPORTS = {football: 'ฟุตบอล', volleyball: 'วอลเลย์บอล', takraw: 'ตะกร้อ', petanque: 'เปตอง'};
+export const LEVELS = {kg: 'อนุบาล', lower: 'ประถมต้น', upper: 'ประถมปลาย', middle: 'มัธยมต้น'};
+export const TYPES = {boys: 'ชาย', girls: 'หญิง'};
+export const STAGES = {group: 'รอบแบ่งกลุ่ม', league: 'พบกันหมด', semi: 'รอบรองชนะเลิศ', third: 'ชิงอันดับ 3', final: 'ชิงชนะเลิศ'};
+export const DAYS = {1: 'วันที่ 1', 2: 'วันที่ 2', 3: 'วันที่ 3', 4: 'วันที่ 4'};
+
+const durations = {football: {kg: 25, lower: 35, upper: 41, middle: 45}, volleyball: 90, takraw: 30, petanque: 90};
+const entities = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'};
+
+export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => entities[char]);
+export const hasScore = match => match.homeScore !== '' && match.awayScore !== '';
+export const duration = (sport, level) => sport === 'football' ? durations.football[level] : durations[sport];
+export const minutes = time => {
+  const [hour, minute] = time.split(':').map(Number);
+  return hour * 60 + minute;
+};
+export const clock = value => [Math.floor(value / 60), value % 60].map(n => String(n).padStart(2, '0')).join(':');
+export const ordered = matches => [...matches].sort((a, b) =>
+  a.day - b.day || a.start.localeCompare(b.start) || a.field.localeCompare(b.field));
+export const fieldName = (fields, id) => fields.find(field => field.id === id)?.name || id;
+export const blank = {matches: [], schools: [], fields: [], settings: {minDay1: '10:15', minOther: '08:00', end: '17:30'}};
+
+export function options(values, selected, placeholder) {
+  const first = placeholder ? '<option value="">' + escapeHtml(placeholder) + '</option>' : '';
+  return first + Object.entries(values).map(([value, label]) =>
+    '<option value="' + escapeHtml(value) + '"' + (value === String(selected) ? ' selected' : '') +
+    '>' + escapeHtml(label) + '</option>').join('');
+}
+
+export function standings(matches, sport) {
+  const groups = new Map();
+  for (const match of matches) {
+    if (match.sport !== sport || !['group', 'league'].includes(match.stage)) continue;
+
+    const groupKey = [match.level, match.type, match.group].join('|');
+    if (!groups.has(groupKey)) groups.set(groupKey, {match, teams: new Map()});
+    const {teams} = groups.get(groupKey);
+    for (const [name, score, opponent] of [[match.home, match.homeScore, match.awayScore], [match.away, match.awayScore, match.homeScore]]) {
+      if (!teams.has(name)) teams.set(name, {name, played: 0, wins: 0, ties: 0, losses: 0});
+      if (!hasScore(match)) continue;
+
+      const team = teams.get(name);
+      team.played++;
+      if (Number(score) > Number(opponent)) team.wins++;
+      else if (Number(score) === Number(opponent)) team.ties++;
+      else team.losses++;
+    }
+  }
+
+  return Array.from(groups.values(), ({match, teams}) => {
+    const rows = Array.from(teams.values(), row => ({
+      ...row, points: sport === 'football' ? row.wins * 3 + row.ties : row.wins,
+    })).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name, 'th'));
+    return {match, rows: rows.map(row => ({...row, rank: rows.findIndex(other => other.points === row.points) + 1}))};
+  });
+}

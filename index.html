@@ -1,166 +1,37 @@
 <!doctype html>
 <html lang="th">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_top">
-<title>สนามกลาง · กีฬานักเรียน นากลาง 3</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Fahkwang:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
-:root{--navy:#102738;--deep:#0b2130;--ink:#132b3a;--muted:#536773;--green:#b8ed95;--line:#dde6e7;--paper:#f4f7f6;--accent:#225748}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px 'Noto Sans Thai',sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #388396;outline-offset:2px}.layout{display:grid;grid-template-columns:237px minmax(0,1fr);min-height:100vh}.side{position:sticky;top:0;height:100vh;background:var(--navy);color:white;padding:28px 18px;display:flex;flex-direction:column}.brand{display:flex;gap:11px;align-items:center;margin:0 7px 33px}.mark{display:grid;place-items:center;background:var(--green);color:var(--deep);width:43px;height:43px;border-radius:12px;font-weight:700;font-size:21px}.brand strong{display:block;font:700 20px Fahkwang,sans-serif}.brand small,.side small{color:#b7c8cf}.nav{display:grid;gap:6px}.nav button{background:none;border:0;border-radius:9px;color:#d6e3e7;padding:11px 13px;text-align:left;display:flex;align-items:center;gap:12px}.nav button[aria-current=true]{background:#264552;color:var(--green);font-weight:700}.nav i{font-style:normal;width:19px;text-align:center}.sidefoot{margin-top:auto;padding:15px 9px 0;border-top:1px solid #3a515e}.sidefoot a{color:#daf6d6;display:block;margin-top:7px}main{min-width:0}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 30px;background:#fff;border-bottom:1px solid var(--line)}.top strong{font-weight:700}.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:#edf3f0;color:#285143;border-radius:99px;padding:6px 11px}.pill::before{content:'';width:7px;height:7px;border-radius:50%;background:#438269}.wrap{padding:26px 30px 44px;max-width:1450px;margin:auto}.hero{padding:31px 32px;border-radius:17px;background:#123c35;color:#fff;position:relative;overflow:hidden;display:flex;justify-content:space-between;isolation:isolate}.hero h1{font:700 clamp(27px,4.5vw,47px)/1.22 Fahkwang,sans-serif;margin:8px 0 11px;letter-spacing:-.025em}.hero p{margin:0;color:#d5e9dd}.hero .eyebrow{color:#c6f9a7;font-weight:700}.pitch{position:absolute;right:-29px;top:4px;width:323px;height:182px;border:1px solid #87b99f65;border-radius:9px;transform:rotate(-12deg);z-index:-1}.pitch:before{content:'';height:100%;left:50%;position:absolute;border-left:1px solid #87b99f65}.pitch:after{content:'';position:absolute;width:73px;height:73px;top:50%;left:50%;translate:-50% -50%;border:1px solid #87b99f65;border-radius:50%}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin:17px 0 24px}.metric,.panel{background:#fff;border:1px solid var(--line);border-radius:13px}.metric{padding:13px 17px}.metric small{color:var(--muted)}.metric strong{display:block;font:700 28px Fahkwang,sans-serif;margin-top:3px}.panel{overflow:hidden}.panelHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px}.panelHead h2{font:700 23px Fahkwang,sans-serif;margin:0}.panelHead small{color:var(--muted)}.btn{border:1px solid #cddbdc;background:#fff;border-radius:8px;padding:7px 12px;color:var(--ink);white-space:nowrap}.primary{background:#214f42;border-color:#214f42;color:white}.days,.filters{display:flex;gap:8px;padding:0 18px 12px;flex-wrap:wrap}.days button[aria-pressed=true]{background:#e1efe6;border-color:#afd0bf;color:#174839;font-weight:700}.filters select{flex:0 1 auto}.control{border:1px solid #bbcdd0;border-radius:8px;padding:7px 10px;background:white;color:var(--ink);min-width:0}.scroll{overflow:auto}table{border-collapse:collapse;width:100%;text-align:left;min-width:620px}th,td{border-top:1px solid #e5edeb;padding:11px 14px;white-space:nowrap}th{background:#f2f6f4;font-size:13px;color:#45615d}td small{color:var(--muted);display:block}.badge{border-radius:6px;padding:3px 7px;font-size:12px;font-weight:600;display:inline-block;background:#e7f0eb;color:#285649}.badge.volleyball{background:#e7eefb;color:#2c4d84}.badge.takraw{background:#fdf0dc;color:#784b10}.badge.petanque{background:#f3eaf9;color:#653e77}.empty,.content{padding:18px}.content h3{margin:14px 0 4px}.content p{margin:5px 0 13px}.content a{color:#225748}.status{min-height:22px;margin:10px 0 0;color:#38594d}.alert{color:#a12b21}dialog{border:1px solid var(--line);border-radius:14px;max-width:min(520px,94vw);width:100%;color:var(--ink);padding:18px}dialog::backdrop{background:#0b213099}.form{display:grid;grid-template-columns:1fr 1fr;gap:9px}.form label{display:grid;gap:3px}.form label.full,.form p,.form footer{grid-column:1/-1}.form footer{display:flex;gap:8px;justify-content:flex-end}.form h2{grid-column:1/-1;margin:0 0 7px}.mobile{display:none}@media(max-width:850px){.layout{grid-template-columns:1fr}.side{position:static;height:auto;padding:11px 12px}.brand,.sidefoot{display:none}.nav{display:flex;overflow:auto}.nav button{white-space:nowrap;gap:5px;padding:7px 9px}.top,.wrap{padding-left:13px;padding-right:13px}.metrics{gap:6px}.metric{padding:9px}.metric strong{font-size:23px}.hero{padding:20px}.pitch{opacity:.65}.mobile{display:inline}}@media(max-width:440px){.metric small{font-size:11px}.panelHead h2{font-size:19px}.filters .control{max-width:100%}.form{grid-template-columns:1fr}}
-.top{flex-wrap:wrap}.top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.live-link{display:inline-block;text-decoration:none}
-</style></head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>สนามกลาง · กีฬานักเรียน นากลาง 3</title>
+  <link rel="stylesheet" href="viewer.css">
+  <script type="module" src="viewer.js"></script>
+</head>
 <body>
-<div class="layout"><aside class="side"><div class="brand"><span class="mark">๓</span><div><strong>สนามกลาง</strong><small>นากลาง 3 · กีฬา 2569</small></div></div><nav class="nav" aria-label="เมนูหลัก" id="nav"></nav><div class="sidefoot"><small>ศูนย์เครือข่ายคุณภาพการศึกษา</small><a href="#setup">การตั้งค่า Google Sheets</a></div></aside>
-<main><header class="top"><strong>การแข่งขันกีฬานักเรียน · นากลาง 3</strong><div class="top-actions"><span class="pill" id="mode">กำลังโหลด</span><a class="btn primary live-link" href="https://script.google.com/macros/s/AKfycbygr4nA_tO-Y6fvSbFBSUtqW_X20lJsJZcDAM_vbrB1sePwfKT7bLLZyaDZJ3DJN_OrNw/exec">เปิดเว็บแข่งขันจริง</a></div></header><div class="wrap"><div id="page"></div><div class="status" id="status" role="status"></div></div></main></div>
-<dialog id="editor"><form class="form" id="form"></form></dialog>
-<script>
-'use strict';
-const SPORTS={football:'ฟุตบอล',volleyball:'วอลเลย์บอล',takraw:'ตะกร้อ',petanque:'เปตอง'};
-const LEVELS={kg:'อนุบาล',lower:'ประถมต้น',upper:'ประถมปลาย',middle:'มัธยมต้น'};
-const TYPES={boys:'ชาย',girls:'หญิง'};
-const STAGES={group:'รอบกลุ่ม',league:'พบกันหมด',semi:'รอบรองฯ',third:'ชิงที่ 3',final:'ชิงชนะเลิศ'};
-const DAYS=[1,2,3,4];
-const FIELDS=[
- ['F1','ฟุตบอลอนุบาล','football','kg'],['F2','ฟุตบอลประถมต้น 1','football','lower'],['F3','ฟุตบอลประถมต้น 2','football','lower'],['F4','ฟุตบอลสนามหลัก','football','upper,middle'],
- ['V1','วอลเลย์บอลประถม','volleyball','upper'],['V2','วอลเลย์บอลมัธยม','volleyball','middle'],
- ['T1','ตะกร้อชาย','takraw','upper,middle','boys'],['T2','ตะกร้อหญิง','takraw','upper,middle','girls'],
- ['P1','เปตองชาย','petanque','upper,middle','boys'],['P2','เปตองหญิง 1','petanque','upper,middle','girls'],['P3','เปตองหญิง 2','petanque','upper,middle','girls'],
-].map(([id,name,sport,levels,type=''])=>({id,name,sport,levels,type}));
-const SCHOOLS=['บ้านท่าอุทัย','บ้านหนองด้วง','ซำขอนแก่น','บ้านโนนสวรรค์','บ้านโนนไหม','บ้านโนนสวาท','บ้านหนองกรุงศรี','บ้านภูพระโนนผักหวาน','บ้านโนนม่วง','บ้านโนนเมือง'];
-const DURATION={football:{kg:25,lower:35,upper:41,middle:45},volleyball:90,takraw:30,petanque:90};
-const duration=(s,l)=>typeof DURATION[s]==='number'?DURATION[s]:DURATION[s]?.[l];
-const minutes=s=>Number(s.split(':')[0])*60+Number(s.split(':')[1]);
-const clock=n=>[Math.floor(n/60),n%60].map(x=>String(x).padStart(2,'0')).join(':');
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const el=id=>document.getElementById(id);
-const gas=typeof google!=='undefined'&&!!google.script?.run;
-const pages=[['dashboard','▦','ภาพรวม'],['schedule','▤','ตารางแข่งขัน'],['results','◎','ผลและอันดับ'],['teams','▣','ทีมและสนาม'],['setup','⚙','ตั้งค่าระบบ']];
-const sample=[
- [1,'10:15','volleyball','upper','girls','V1','บ้านท่าอุทัย','บ้านโนนไหม','group','A'],
- [1,'10:15','volleyball','middle','boys','V2','บ้านหนองกรุงศรี','บ้านภูพระโนนผักหวาน','league',''],
- [1,'10:15','football','kg','boys','F1','บ้านโนนเมือง','บ้านโนนม่วง','group','B'],
- [1,'10:15','football','lower','boys','F2','บ้านหนองด้วง–ซำขอนแก่น','บ้านโนนสวรรค์','group','A'],
- [1,'10:15','football','lower','girls','F3','บ้านโนนสวาท','บ้านหนองกรุงศรี','group','A'],
- [1,'10:15','football','upper','boys','F4','บ้านโนนไหม','บ้านท่าอุทัย','group','A'],
- [1,'10:15','petanque','upper','girls','P2','บ้านโนนเมือง','บ้านโนนม่วง','group','B'],
- [1,'10:45','takraw','middle','girls','T2','บ้านโนนเมือง','บ้านโนนม่วง','league',''],
- [1,'12:00','volleyball','upper','boys','V1','บ้านโนนสวรรค์','บ้านโนนสวาท','group','B'],
- [1,'12:00','volleyball','middle','girls','V2','บ้านโนนเมือง','บ้านโนนม่วง','league',''],
- [2,'08:00','football','lower','boys','F2','บ้านโนนสวรรค์','บ้านโนนเมือง','group','A'],
- [3,'08:00','volleyball','upper','girls','V1','บ้านโนนไหม','บ้านโนนม่วง','group','A'],
- [4,'08:00','football','middle','boys','F4','บ้านโนนม่วง','บ้านโนนเมือง','league',''],
-].map(([day,start,sport,level,type,field,home,away,stage,group],i)=>({id:'M'+String(i+1).padStart(3,'0'),day,start,sport,level,type,field,home,away,stage,group,homeScore:i===2?2:'',awayScore:i===2?0:'',published:true}));
-let data={matches:sample,fields:FIELDS,schools:SCHOOLS,settings:{minDay1:'10:15',minOther:'08:00',end:'17:30'},canEdit:!gas};
-let key='',day=1,sport='',level='',type='',resultFilter='football',view='dashboard',busy=false;
-if(!gas){try{const s=JSON.parse(localStorage.getItem('naklang3-demo-v1'));if(Array.isArray(s))data.matches=s;}catch{}}
-const rpc=(name,...args)=>new Promise((yes,no)=>google.script.run.withSuccessHandler(yes).withFailureHandler(e=>no(new Error(e.message)))[name](...args));
-const fieldName=id=>data.fields.find(x=>x.id===id)?.name||id;
-const played=m=>m.homeScore!==''&&m.awayScore!=='';
-const ordered=rows=>[...rows].sort((a,b)=>a.day-b.day||a.start.localeCompare(b.start)||a.field.localeCompare(b.field));
-function say(message,error=false){el('status').textContent=message;el('status').classList.toggle('alert',error);}
-function option(obj,selected,first){return (first?'<option value="">'+first+'</option>':'')+Object.entries(obj).map(([k,v])=>'<option value="'+esc(k)+'"'+(String(k)===String(selected)?' selected':'')+'>'+esc(v)+'</option>').join('');}
-const select=(id,obj,value,first)=>'<select class="control" id="'+id+'" aria-label="'+({sport:'ชนิดกีฬา',level:'รุ่น',type:'ประเภท',resultSport:'ชนิดกีฬาสำหรับจัดอันดับ'}[id]||id)+'">'+option(obj,value,first)+'</select>';
-const badges=m=>'<span class="badge '+m.sport+'">'+SPORTS[m.sport]+'</span>';
-const row=m=>'<tr><td><strong>'+esc(m.start)+'</strong><small>ถึง '+clock(minutes(m.start)+duration(m.sport,m.level))+'</small></td><td>'+badges(m)+'<small>'+LEVELS[m.level]+' · '+TYPES[m.type]+'</small></td><td><strong>'+esc(m.home)+' พบ '+esc(m.away)+'</strong><small>'+STAGES[m.stage]+(m.group?' '+esc(m.group):'')+'</small></td><td>'+esc(fieldName(m.field))+'</td><td>'+(played(m)?'<strong>'+m.homeScore+' – '+m.awayScore+'</strong>':m.published?'รอแข่ง':'ร่าง')+'</td>'+(data.canEdit?'<td><button class="btn" data-edit="'+esc(m.id)+'">แก้ไข</button></td>':'')+'</tr>';
-const matchTable=rows=>rows.length?'<div class="scroll"><table><thead><tr><th>เวลา</th><th>รายการ</th><th>คู่แข่งขัน</th><th>สนาม</th><th>ผล</th>'+(data.canEdit?'<th>จัดการ</th>':'')+'</tr></thead><tbody>'+rows.map(row).join('')+'</tbody></table></div>':'<div class="empty">ยังไม่มีคู่แข่งขันตามตัวกรองนี้</div>';
-function schedule(){
- const rows=ordered(data.matches.filter(m=>Number(m.day)===day&&(!sport||m.sport===sport)&&(!level||m.level===level)&&(!type||m.type===type)));
- return '<section class="panel"><div class="panelHead"><div><h2>ตารางแข่งขัน</h2><small>'+rows.length+' คู่ · วันที่ '+day+'</small></div>'+(data.canEdit?'<button class="btn primary" id="add">+ เพิ่มคู่แข่งขัน</button>':'')+'</div><div class="days">'+DAYS.map(d=>'<button class="btn" data-day="'+d+'" aria-pressed="'+(d===day)+'">วันที่ '+d+(d===1?' · เปิดงาน':'')+'</button>').join('')+'</div><div class="filters">'+select('sport',SPORTS,sport,'ทุกกีฬา')+select('level',LEVELS,level,'ทุกรุ่น')+select('type',TYPES,type,'ทุกประเภท')+'</div>'+matchTable(rows)+'</section>';
-}
-function standings(){
- const matches=ordered(data.matches.filter(m=>m.sport===resultFilter&&played(m)));
- const groups={};
- for(const m of data.matches.filter(m=>m.sport===resultFilter&&['group','league'].includes(m.stage))){
-   const k=[m.level,m.type,m.group].join('|');
-   groups[k]??={m,teams:Object.create(null)};
-   for(const [team,other,own,opp] of [[m.home,m.away,m.homeScore,m.awayScore],[m.away,m.home,m.awayScore,m.homeScore]]){
-     const t=groups[k].teams[team]??={name:team,p:0,w:0,d:0,l:0,gf:0,ga:0};
-     if(played(m)){t.p++;t.gf+=Number(own);t.ga+=Number(opp);t[own>opp?'w':Number(own)===Number(opp)?'d':'l']++;}
-   }
- }
- return '<section class="panel"><div class="panelHead"><h2>ผลและอันดับ</h2>'+select('resultSport',SPORTS,resultFilter)+'</div><div class="content"><small>อันดับเบื้องต้นใช้ฟุตบอล ชนะ 3 เสมอ 1 และกีฬาอื่นเรียงตามจำนวนชนะ · คะแนนเท่ากันแสดงอันดับร่วม</small>'+Object.values(groups).map(({m,teams})=>{
-   const points=t=>resultFilter==='football'?t.w*3+t.d:t.w;
-   const sorted=Object.values(teams).sort((x,y)=>points(y)-points(x)||x.name.localeCompare(y.name,'th'));
-   return '<h3>'+LEVELS[m.level]+' '+TYPES[m.type]+(m.group?' · กลุ่ม '+esc(m.group):' · พบกันหมด')+'</h3><div class="scroll"><table><thead><tr><th>อันดับ</th><th>ทีม</th><th>แข่ง</th><th>ชนะ</th><th>เสมอ</th><th>แพ้</th><th>คะแนนเบื้องต้น</th></tr></thead><tbody>'+sorted.map(t=>'<tr><td>'+(sorted.findIndex(s=>points(s)===points(t))+1)+'</td><td>'+esc(t.name)+'</td><td>'+t.p+'</td><td>'+t.w+'</td><td>'+t.d+'</td><td>'+t.l+'</td><td>'+points(t)+'</td></tr>').join('')+'</tbody></table></div>';
- }).join('')+'</div><div class="panelHead"><h2>ผลการแข่งขัน</h2></div>'+matchTable(matches)+'</section>';
-}
-function render(){
- el('mode').textContent=gas?(data.canEdit?'Google Sheets · ผู้จัด':'Google Sheets · ผู้ชม'):'ข้อมูลตัวอย่าง · ทดลองได้';
- el('nav').innerHTML=pages.map(([k,icon,name])=>'<button data-view="'+k+'" aria-current="'+(view===k)+'"><i aria-hidden="true">'+icon+'</i>'+name+'</button>').join('');
- const hero='<section class="hero"><div class="pitch" aria-hidden="true"></div><div><span class="eyebrow">นากลาง 3 · ปีการศึกษา 2569</span><h1>ศูนย์จัดการแข่งขันกีฬา</h1><p>ดูตารางสนาม บันทึกผล และติดตามอันดับการแข่งขัน</p></div></section>';
- const metrics='<div class="metrics">'+[['โรงเรียน',data.schools.length],['สนาม',data.fields.length],['คู่ในระบบ',data.matches.length],['บันทึกผลแล้ว',data.matches.filter(played).length]].map(([l,n])=>'<div class="metric"><small>'+l+'</small><strong>'+n+'</strong></div>').join('')+'</div>';
- el('page').innerHTML= view==='dashboard'?hero+metrics+schedule():view==='schedule'?schedule():view==='results'?standings():view==='teams'?'<section class="panel"><div class="panelHead"><h2>ทีมและสนาม</h2></div><div class="content"><h3>โรงเรียน</h3><p>'+data.schools.map(esc).join(' · ')+'</p><p>บ้านหนองด้วงและซำขอนแก่นรวมทีมเฉพาะฟุตบอลและวอลเลย์บอล</p><h3>สนามแข่งขัน</h3></div><div class="scroll"><table><thead><tr><th>รหัส</th><th>สนาม</th><th>กีฬา</th><th>รุ่น</th></tr></thead><tbody>'+data.fields.map(f=>'<tr><td>'+esc(f.id)+'</td><td>'+esc(f.name)+'</td><td>'+SPORTS[f.sport]+'</td><td>'+f.levels.split(',').map(l=>LEVELS[l]).join(' / ')+'</td></tr>').join('')+'</tbody></table></div></section>':'<section class="panel"><div class="panelHead"><h2>ตั้งค่าระบบ</h2></div><div class="content">'+(gas?'<form id="unlock"><label>รหัสผู้จัด <input class="control" type="password" name="key" required autocomplete="current-password"></label> <button class="btn primary">เข้าสู่หน้าผู้จัด</button>'+(data.canEdit?' <button type="button" id="logout" class="btn">ออกจากหน้าผู้จัด</button>':'')+'</form>':'<h3>เชื่อม Google Sheets</h3><p>ดาวน์โหลดชุดติดตั้งแล้วทำตามขั้นตอนในไฟล์ README เพื่อสร้างชีตและเปิดเว็บผ่าน Google Apps Script</p><a href="setup/naklang3-google-sheets.zip" download>ดาวน์โหลดชุดติดตั้ง Google Sheets</a><p>ข้อมูลทดลองจะบันทึกไว้ในเบราว์เซอร์เครื่องนี้</p><p><a href="https://github.com/MooMINooM/naklang3-sports-2569/blob/main/apps-script/sports-center/README.md">วิธีติดตั้ง Google Sheets</a> · <a href="sheets-api.html">หน้าเชื่อมต่อ Google Sheets เดิม</a></p>')+'<h3>เงื่อนไขจัดตาราง</h3><p>วันที่ 1 เริ่ม '+esc(data.settings.minDay1)+' หลังขบวน · วันที่ 2–4 เริ่ม '+esc(data.settings.minOther)+' · เวลาสิ้นสุดที่ใช้คำนวณ '+esc(data.settings.end)+'</p><p>ฟุตบอลรวมพักครึ่ง 25 / 35 / 41 / 45 นาทีตามรุ่น วอลเลย์บอล 90 นาที ตะกร้อ 30 นาที เปตอง 90 นาที</p><p>ฟุตบอลกับวอลเลย์บอลของรุ่นและประเภทเดียวกันต้องเว้น 15 นาที คู่ตะกร้อและเปตองที่ลงพร้อมกันต้องใช้คนละชุดนักกีฬา</p></div></section>';
-}
-function edit(m){
- const isNew=!m;
- m=m||{id:'',day,start:day===1?data.settings.minDay1:data.settings.minOther,sport:sport||'football',level:level||'upper',type:type||'boys',field:'',home:'',away:'',stage:level==='middle'?'league':'group',group:'A',homeScore:'',awayScore:'',published:false};
- const input=(n,label,t='text',extra='')=>'<label>'+label+'<input class="control" name="'+n+'" type="'+t+'" value="'+esc(m[n])+'" '+extra+'></label>';
- const choice=(n,label,v)=>'<label>'+label+'<select class="control" name="'+n+'" required>'+option(v,m[n],n==='field'?'เลือกสนาม':'')+'</select></label>';
- el('form').innerHTML='<h2>'+(isNew?'เพิ่มคู่แข่งขัน':'แก้ไขคู่และบันทึกผล')+'</h2><input name="id" type="hidden" value="'+esc(m.id)+'">'+choice('day','วัน',{'1':'วันที่ 1','2':'วันที่ 2','3':'วันที่ 3','4':'วันที่ 4'})+input('start','เวลาเริ่ม','time','required')+choice('sport','กีฬา',SPORTS)+choice('level','รุ่น',LEVELS)+choice('type','ประเภท',TYPES)+choice('field','สนาม',Object.fromEntries(data.fields.map(f=>[f.id,f.name])))+choice('stage','รอบ',STAGES)+input('group','กลุ่ม A–C','text','maxlength="1"')+input('home','ทีม A','text','required maxlength="100"')+input('away','ทีม B','text','required maxlength="100"')+input('homeScore','คะแนนทีม A','number','min="0" max="999"')+input('awayScore','คะแนนทีม B','number','min="0" max="999"')+'<label class="full"><span><input name="published" type="checkbox" '+(m.published?'checked':'')+'> แสดงในหน้าผู้ชม</span></label><p id="editStatus" class="alert" role="status"></p><footer><button type="button" id="cancel" class="btn">ยกเลิก</button><button class="btn primary" id="saveMatch">บันทึก</button></footer>';
- el('editor').showModal();
-}
-function check(m,all,fields,settings){
- const len=duration(m.sport,m.level),f=fields.find(x=>x.id===m.field);
- if(!DAYS.includes(m.day)||!Number.isInteger(len)||!TYPES[m.type]||!STAGES[m.stage]||!/^([01]\d|2[0-3]):[0-5]\d$/.test(m.start))return 'วัน เวลา หรือรายการแข่งขันไม่ถูกต้อง';
- const a=minutes(m.start), b=a+len;
- if(a<minutes(m.day===1?settings.minDay1:settings.minOther)||b>minutes(settings.end))return 'เวลาคู่นี้อยู่นอกช่วงแข่งขัน';
- const conversion=(f?.id==='F2'||f?.id==='F3')&&Number(settings.convertDay)>0;
- const at=conversion?Number(settings.convertDay)*1440+minutes(settings.convertTime):Infinity;
- const t=m.day*1440+a;
- const allowed=conversion&&t>=at?['upper','middle']:f?.levels.split(',');
- if(!f||f.sport!==m.sport||!allowed.includes(m.level)||(f.type&&f.type!==m.type)||(conversion&&t<at&&m.day*1440+b>at))return 'สนามไม่รองรับรายการนี้ในช่วงเวลาที่เลือก';
- if(!m.home||!m.away||m.home===m.away||m.home.length>100||m.away.length>100||/^[=+\-@]/.test(m.home)||/^[=+\-@]/.test(m.away))return 'กรอกชื่อคู่แข่งขันสองทีมที่ต่างกัน';
- if((m.level==='middle'&&m.stage!=='league')||(m.level!=='middle'&&m.stage==='league')||(m.stage==='group'&&!/^[ABC]$/.test(m.group)))return 'ตรวจรอบการแข่งขันและรหัสกลุ่ม';
- if((m.homeScore==='')!==(m.awayScore==='')||[m.homeScore,m.awayScore].some(x=>x!==''&&!(Number.isInteger(x)&&x>=0&&x<=999)))return 'กรอกคะแนนทั้งสองทีมเป็นจำนวนเต็ม 0–999';
- for(const n of all.filter(n=>n.id!==m.id)){
-   const same=n.level===m.level&&n.type===m.type, sameSport=n.sport===m.sport;
-   if(same&&sameSport&&m.stage===n.stage&&['group','league'].includes(m.stage)&&[n.home,n.away].includes(m.home)&&[n.home,n.away].includes(m.away))return 'มีคู่แข่งขันนี้ในรอบเดียวกันแล้ว';
-   if(Number(n.day)!==m.day)continue;
-   const c=minutes(n.start),d=c+duration(n.sport,n.level);
-   const anchored=same&&['football','volleyball'].includes(m.sport)&&['football','volleyball'].includes(n.sport);
-   const repeat=same&&sameSport&&[n.home,n.away].some(team=>team===m.home||team===m.away);
-   if(n.field===m.field&&a<d&&c<b)return 'สนามมีคิวชนกับ '+n.home+' พบ '+n.away;
-   if((anchored&&a<d+15&&c<b+15)||(repeat&&a<d&&c<b))return 'คิวชนหรือเวลาพักไม่ครบกับ '+n.home+' พบ '+n.away;
- }
- return '';
-}
-async function loadData(){if(gas){data=await rpc('getSportsData',key);if(key&&!data.canEdit){key='';say('รหัสผู้จัดไม่ถูกต้อง',true);}}render();}
-function setView(k){view=pages.some(v=>v[0]===k)?k:'dashboard';render();}
-document.addEventListener('click',e=>{
- const b=e.target.closest('button');if(!b)return;
- if(b.dataset.view){location.hash=b.dataset.view;setView(b.dataset.view);}
- if(b.dataset.day){day=+b.dataset.day;render();}
- if(b.dataset.edit){const match=data.matches.find(x=>x.id===b.dataset.edit);if(match)edit(match);}
- if(b.id==='add')edit();
- if(b.id==='cancel')el('editor').close();
- if(b.id==='logout'){key='';loadData().catch(e=>say(e.message,true));}
-});
-document.addEventListener('change',e=>{const {id,value}=e.target;
- if(id==='sport')sport=value;else if(id==='level')level=value;else if(id==='type')type=value;else if(id==='resultSport')resultFilter=value;else return;
- render();el(id)?.focus();
-});
-document.addEventListener('submit',async e=>{
- const formId=e.target.getAttribute('id');
- if(!['form','unlock'].includes(formId))return;
- e.preventDefault();
- if(busy)return;
- const input=new FormData(e.target);
- if(formId==='unlock'){key=String(input.get('key'));try{await loadData();if(data.canEdit)say('เปิดหน้าผู้จัดแล้ว');}catch(e){say(e.message,true);}return;}
- const m=Object.fromEntries(input);
- m.day=Number(m.day);m.published=input.has('published');m.group=m.stage==='group'?m.group.trim().toUpperCase():'';
- m.home=m.home.trim();m.away=m.away.trim();
- for(const k of ['homeScore','awayScore'])m[k]=m[k]===''?'':Number(m[k]);
- const msg=check(m,data.matches,data.fields,data.settings);
- if(msg){el('editStatus').textContent=msg;return;}
- busy=true;el('saveMatch').disabled=true;
- try{
-  if(gas){await rpc('saveSportsMatch',key,m);await loadData();}
-  else{m.id||='D'+Date.now();data.matches=data.matches.filter(x=>x.id!==m.id).concat(m);localStorage.setItem('naklang3-demo-v1',JSON.stringify(data.matches));render();}
-  el('editor').close();say(gas?'บันทึกใน Google Sheets แล้ว':'บันทึกข้อมูลทดลองในเครื่องนี้แล้ว');
- }catch(e){el('editStatus').textContent=e.message;}
- finally{busy=false;el('saveMatch').disabled=false;}
-});
-window.addEventListener('hashchange',()=>setView(location.hash.slice(1)));
-if(gas){data={...data,matches:[],canEdit:false};}
-setView(location.hash.slice(1));
-if(gas)loadData().catch(e=>say(e.message,true));
-</script></body></html>
+  <div class="layout">
+    <aside class="side">
+      <div class="brand"><span class="mark">๓</span><div><strong>สนามกลาง</strong><small>นากลาง 3 · กีฬา 2569</small></div></div>
+      <nav class="nav" aria-label="เมนูผู้ชม">
+        <button data-view="schedule" aria-current="true"><i aria-hidden="true">▤</i>ตารางแข่งขัน</button>
+        <button data-view="results" aria-current="false"><i aria-hidden="true">◎</i>ผลและอันดับ</button>
+        <button data-view="venues" aria-current="false"><i aria-hidden="true">▣</i>โรงเรียนและสนาม</button>
+      </nav>
+    </aside>
+    <main>
+      <header class="top">
+        <strong>การแข่งขันกีฬานักเรียน · นากลาง 3</strong>
+        <div class="top-actions"><span class="pill" id="sync" role="status">กำลังโหลดตาราง</span><a class="editor-link" href="admin.html">สำหรับผู้จัดการแข่งขัน</a></div>
+      </header>
+      <div class="wrap">
+        <section class="hero">
+          <div class="pitch" aria-hidden="true"></div>
+          <div><span class="eyebrow">นากลาง 3 · ปีการศึกษา 2569</span><h1>ตารางและผลการแข่งขัน</h1><p>กีฬานักเรียน ศูนย์เครือข่ายคุณภาพการศึกษานากลาง 3</p></div>
+        </section>
+        <p id="connection-error" class="load-error" role="alert" hidden></p>
+        <button id="reload" class="btn" type="button" hidden>ลองเชื่อมต่อใหม่</button>
+        <div id="content" class="viewer-section"><p>กำลังอ่านข้อมูลการแข่งขัน…</p></div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

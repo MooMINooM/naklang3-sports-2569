@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="th">
+<head><meta charset="utf-8"><title>สนามกลาง · เชื่อมข้อมูล</title></head>
+<body data-bridge="<?= bridgeId ?>">
+<script>
+'use strict';
+
+const pagesOrigin = 'https://moominoom.github.io';
+const bridgeId = document.body.dataset.bridge;
+const topWindow = window.top;
+
+function send(reply) {
+  topWindow.postMessage({bridgeId, ...reply}, pagesOrigin);
+}
+
+if (topWindow !== window) {
+  window.addEventListener('message', event => {
+    if (event.origin !== pagesOrigin || event.source !== topWindow) return;
+
+    const message = event.data;
+    if (!message || message.bridgeId !== bridgeId || !Number.isSafeInteger(message.id)) return;
+
+    const reply = google.script.run
+      .withSuccessHandler(value => send({id: message.id, value}))
+      .withFailureHandler(error => send({id: message.id, error: error.message}));
+
+    if (message.action === 'read') {
+      reply.getSportsData(typeof message.key === 'string' ? message.key : '');
+    } else if (message.action === 'save') {
+      reply.saveSportsMatch(message.key, message.match);
+    }
+  });
+
+  send({ready: true});
+}
+</script>
+</body>
+</html>
