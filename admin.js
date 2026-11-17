@@ -240,7 +240,14 @@ function drawOptions() {
 function renderDraw() {
   const draw = data.draws.find(item => item.key === drawFields.event.value);
   if (!draw) return;
-  drawFields.tieOrder.value = draw.tieOrder;
+  const numbered = Object.keys(draw.numbers || {}).length > 0;
+  drawFields.tieOrder.placeholder = numbered ? '1, 5, 9' : 'A1, B2, C1';
+  drawFields.tieOrder.value = numbered
+    ? draw.tieOrder.split(',').map(slot => draw.numbers[slot]).filter(Boolean).join(', ')
+    : draw.tieOrder;
+  byId('draw-tie-help').textContent = numbered
+    ? 'ใส่เลขทีมตามที่เห็นในตารางแข่ง จากอันดับสูงไปต่ำตามผลตัดสินของกรรมการ'
+    : 'ใส่รหัสทีมจากอันดับสูงไปต่ำตามผลตัดสินของกรรมการ';
 
   status('draw-status', '');
 }
@@ -259,11 +266,21 @@ drawForm.addEventListener('submit', async event => {
   if (busy || !key) return;
   const draw = data.draws.find(item => item.key === drawFields.event.value);
   if (!draw) return;
+  let tieOrder = drawFields.tieOrder.value;
+  if (Object.keys(draw.numbers || {}).length) {
+    const slotsByNumber = new Map(Object.entries(draw.numbers).map(([slot, number]) => [number, slot]));
+    const slots = tieOrder.trim().split(/[\s,]+/).filter(Boolean).map(number => slotsByNumber.get(number));
+    if (slots.some(slot => !slot) || new Set(slots).size !== slots.length) {
+      status('draw-status', 'ใส่เฉพาะเลขทีมที่อยู่ในรายการนี้และเรียงโดยไม่ซ้ำกัน', true);
+      return;
+    }
+    tieOrder = slots.join(',');
+  }
   const save = byId('save-draw');
   busy = save.disabled = drawFields.event.disabled = true;
   status('draw-status', 'กำลังบันทึกลำดับ…');
   try {
-    await saveDraw(key, {key: draw.key, tieOrder: drawFields.tieOrder.value});
+    await saveDraw(key, {key: draw.key, tieOrder});
     data = await readSports(key);
     render();
     renderDraw();
