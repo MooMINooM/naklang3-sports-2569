@@ -26,7 +26,12 @@ const FIELDS=[
 ].map(([id,name,sport,levels,type=''])=>({id,name,sport,levels,type}));
 const SCHOOLS=['บ้านท่าอุทัย','บ้านหนองด้วง','ซำขอนแก่น','บ้านโนนสวรรค์','บ้านโนนไหม','บ้านโนนสวาท','บ้านหนองกรุงศรี','บ้านภูพระโนนผักหวาน','บ้านโนนม่วง','บ้านโนนเมือง'];
 const DURATION={football:{kg:25,lower:35,upper:41,middle:45},volleyball:90,takraw:30,petanque:90};
-const duration=(s,l)=>typeof DURATION[s]==='number'?DURATION[s]:DURATION[s]?.[l];
+function duration(match, settings){
+ const {sport,level,stage}=match;
+ const groupMinutes=Number(settings.volleyballUpperGroupMinutes);
+ if(sport==='volleyball'&&level==='upper'&&stage==='group'&&Number.isInteger(groupMinutes)&&groupMinutes>0)return groupMinutes;
+ return typeof DURATION[sport]==='number'?DURATION[sport]:DURATION[sport]?.[level];
+}
 const minutes=s=>Number(s.split(':')[0])*60+Number(s.split(':')[1]);
 const clock=n=>[Math.floor(n/60),n%60].map(x=>String(x).padStart(2,'0')).join(':');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -59,7 +64,7 @@ function say(message,error=false){el('status').textContent=message;el('status').
 function option(obj,selected,first){return (first?'<option value="">'+first+'</option>':'')+Object.entries(obj).map(([k,v])=>'<option value="'+esc(k)+'"'+(String(k)===String(selected)?' selected':'')+'>'+esc(v)+'</option>').join('');}
 const select=(id,obj,value,first)=>'<select class="control" id="'+id+'" aria-label="'+({sport:'ชนิดกีฬา',level:'รุ่น',type:'ประเภท',resultSport:'ชนิดกีฬาสำหรับจัดอันดับ'}[id]||id)+'">'+option(obj,value,first)+'</select>';
 const badges=m=>'<span class="badge '+m.sport+'">'+SPORTS[m.sport]+'</span>';
-const row=m=>'<tr><td><strong>'+esc(m.start)+'</strong><small>ถึง '+clock(minutes(m.start)+duration(m.sport,m.level))+'</small></td><td>'+badges(m)+'<small>'+LEVELS[m.level]+' · '+TYPES[m.type]+'</small></td><td><strong>'+esc(m.home)+' พบ '+esc(m.away)+'</strong><small>'+STAGES[m.stage]+(m.group?' '+esc(m.group):'')+'</small></td><td>'+esc(fieldName(m.field))+'</td><td>'+(played(m)?'<strong>'+m.homeScore+' – '+m.awayScore+'</strong>':m.published?'รอแข่ง':'ร่าง')+'</td>'+(data.canEdit?'<td><button class="btn" data-edit="'+esc(m.id)+'">แก้ไข</button></td>':'')+'</tr>';
+const row=m=>'<tr><td><strong>'+esc(m.start)+'</strong><small>ถึง '+clock(minutes(m.start)+duration(m,data.settings))+'</small></td><td>'+badges(m)+'<small>'+LEVELS[m.level]+' · '+TYPES[m.type]+'</small></td><td><strong>'+esc(m.home)+' พบ '+esc(m.away)+'</strong><small>'+STAGES[m.stage]+(m.group?' '+esc(m.group):'')+'</small></td><td>'+esc(fieldName(m.field))+'</td><td>'+(played(m)?'<strong>'+m.homeScore+' – '+m.awayScore+'</strong>':m.published?'รอแข่ง':'ร่าง')+'</td>'+(data.canEdit?'<td><button class="btn" data-edit="'+esc(m.id)+'">แก้ไข</button></td>':'')+'</tr>';
 const matchTable=rows=>rows.length?'<div class="scroll"><table><thead><tr><th>เวลา</th><th>รายการ</th><th>คู่แข่งขัน</th><th>สนาม</th><th>ผล</th>'+(data.canEdit?'<th>จัดการ</th>':'')+'</tr></thead><tbody>'+rows.map(row).join('')+'</tbody></table></div>':'<div class="empty">ยังไม่มีคู่แข่งขันตามตัวกรองนี้</div>';
 function schedule(){
  const rows=ordered(data.matches.filter(m=>Number(m.day)===day&&(!sport||m.sport===sport)&&(!level||m.level===level)&&(!type||m.type===type)));
@@ -87,7 +92,7 @@ function render(){
  el('nav').innerHTML=pages.map(([k,icon,name])=>'<button data-view="'+k+'" aria-current="'+(view===k)+'"><i aria-hidden="true">'+icon+'</i>'+name+'</button>').join('');
  const hero='<section class="hero"><div class="pitch" aria-hidden="true"></div><div><span class="eyebrow">นากลาง 3 · ปีการศึกษา 2569</span><h1>ศูนย์จัดการแข่งขันกีฬา</h1><p>ดูตารางสนาม บันทึกผล และติดตามอันดับการแข่งขัน</p></div></section>';
  const metrics='<div class="metrics">'+[['โรงเรียน',data.schools.length],['สนาม',data.fields.length],['คู่ในระบบ',data.matches.length],['บันทึกผลแล้ว',data.matches.filter(played).length]].map(([l,n])=>'<div class="metric"><small>'+l+'</small><strong>'+n+'</strong></div>').join('')+'</div>';
- el('page').innerHTML= view==='dashboard'?hero+metrics+schedule():view==='schedule'?schedule():view==='results'?standings():view==='teams'?'<section class="panel"><div class="panelHead"><h2>ทีมและสนาม</h2></div><div class="content"><h3>โรงเรียน</h3><p>'+data.schools.map(esc).join(' · ')+'</p><p>บ้านหนองด้วงและซำขอนแก่นรวมทีมเฉพาะฟุตบอลและวอลเลย์บอล</p><h3>สนามแข่งขัน</h3></div><div class="scroll"><table><thead><tr><th>รหัส</th><th>สนาม</th><th>กีฬา</th><th>รุ่น</th></tr></thead><tbody>'+data.fields.map(f=>'<tr><td>'+esc(f.id)+'</td><td>'+esc(f.name)+'</td><td>'+SPORTS[f.sport]+'</td><td>'+f.levels.split(',').map(l=>LEVELS[l]).join(' / ')+'</td></tr>').join('')+'</tbody></table></div></section>':'<section class="panel"><div class="panelHead"><h2>ตั้งค่าระบบ</h2></div><div class="content">'+(gas?'<form id="unlock"><label>รหัสผู้จัด <input class="control" type="password" name="key" required autocomplete="current-password"></label> <button class="btn primary">เข้าสู่หน้าผู้จัด</button>'+(data.canEdit?' <button type="button" id="logout" class="btn">ออกจากหน้าผู้จัด</button>':'')+'</form>':'<h3>เชื่อม Google Sheets</h3><p>ดาวน์โหลดชุดติดตั้งแล้วทำตามขั้นตอนในไฟล์ README เพื่อสร้างชีตและเปิดเว็บผ่าน Google Apps Script</p><a href="setup/naklang3-google-sheets.zip" download>ดาวน์โหลดชุดติดตั้ง Google Sheets</a><p>ข้อมูลทดลองจะบันทึกไว้ในเบราว์เซอร์เครื่องนี้</p>')+'<h3>เงื่อนไขจัดตาราง</h3><p>วันที่ 1 เริ่ม '+esc(data.settings.minDay1)+' หลังขบวน · วันที่ 2–4 เริ่ม '+esc(data.settings.minOther)+' · เวลาสิ้นสุดที่ใช้คำนวณ '+esc(data.settings.end)+'</p><p>ฟุตบอลรวมพักครึ่ง 25 / 35 / 41 / 45 นาทีตามรุ่น วอลเลย์บอล 90 นาที ตะกร้อ 30 นาที เปตอง 90 นาที</p><p>ฟุตบอลกับวอลเลย์บอลของรุ่นและประเภทเดียวกันต้องเว้น 15 นาที คู่ตะกร้อและเปตองที่ลงพร้อมกันต้องใช้คนละชุดนักกีฬา</p></div></section>';
+ el('page').innerHTML= view==='dashboard'?hero+metrics+schedule():view==='schedule'?schedule():view==='results'?standings():view==='teams'?'<section class="panel"><div class="panelHead"><h2>ทีมและสนาม</h2></div><div class="content"><h3>โรงเรียน</h3><p>'+data.schools.map(esc).join(' · ')+'</p><p>บ้านหนองด้วงและซำขอนแก่นรวมทีมเฉพาะฟุตบอลและวอลเลย์บอล</p><h3>สนามแข่งขัน</h3></div><div class="scroll"><table><thead><tr><th>รหัส</th><th>สนาม</th><th>กีฬา</th><th>รุ่น</th></tr></thead><tbody>'+data.fields.map(f=>'<tr><td>'+esc(f.id)+'</td><td>'+esc(f.name)+'</td><td>'+SPORTS[f.sport]+'</td><td>'+f.levels.split(',').map(l=>LEVELS[l]).join(' / ')+'</td></tr>').join('')+'</tbody></table></div></section>':'<section class="panel"><div class="panelHead"><h2>ตั้งค่าระบบ</h2></div><div class="content">'+(gas?'<form id="unlock"><label>รหัสผู้จัด <input class="control" type="password" name="key" required autocomplete="current-password"></label> <button class="btn primary">เข้าสู่หน้าผู้จัด</button>'+(data.canEdit?' <button type="button" id="logout" class="btn">ออกจากหน้าผู้จัด</button>':'')+'</form>':'<h3>เชื่อม Google Sheets</h3><p>ดาวน์โหลดชุดติดตั้งแล้วทำตามขั้นตอนในไฟล์ README เพื่อสร้างชีตและเปิดเว็บผ่าน Google Apps Script</p><a href="setup/naklang3-google-sheets.zip" download>ดาวน์โหลดชุดติดตั้ง Google Sheets</a><p>ข้อมูลทดลองจะบันทึกไว้ในเบราว์เซอร์เครื่องนี้</p>')+'<h3>เงื่อนไขจัดตาราง</h3><p>วันที่ 1 เริ่ม '+esc(data.settings.minDay1)+' หลังขบวน · วันที่ 2–4 เริ่ม '+esc(data.settings.minOther)+' · เวลาสิ้นสุดที่ใช้คำนวณ '+esc(data.settings.end)+'</p><p>ฟุตบอลรวมพักครึ่ง 25 / 35 / 41 / 45 นาทีตามรุ่น วอลเลย์บอล '+esc(data.settings.volleyballUpperGroupMinutes?'รอบกลุ่มประถมปลาย '+data.settings.volleyballUpperGroupMinutes+' นาที รอบอื่น 90 นาที':'90 นาที')+' ตะกร้อ 30 นาที เปตอง 90 นาที</p><p>ฟุตบอลกับวอลเลย์บอลของรุ่นและประเภทเดียวกันต้องเว้น 15 นาที คู่ตะกร้อและเปตองที่ลงพร้อมกันต้องใช้คนละชุดนักกีฬา</p></div></section>';
 }
 function edit(m){
  const isNew=!m;
@@ -98,10 +103,11 @@ function edit(m){
  el('editor').showModal();
 }
 function check(m,all,fields,settings){
- const len=duration(m.sport,m.level),f=fields.find(x=>x.id===m.field);
+ const len=duration(m,settings),f=fields.find(x=>x.id===m.field);
  if(!DAYS.includes(m.day)||!Number.isInteger(len)||!TYPES[m.type]||!STAGES[m.stage]||!/^([01]\d|2[0-3]):[0-5]\d$/.test(m.start))return 'วัน เวลา หรือรายการแข่งขันไม่ถูกต้อง';
  const a=minutes(m.start), b=a+len;
- if(a<minutes(m.day===1?settings.minDay1:settings.minOther)||b>minutes(settings.end))return 'เวลาคู่นี้อยู่นอกช่วงแข่งขัน';
+ const end=m.day===4?(settings.endDay4||settings.end):settings.end;
+ if(a<minutes(m.day===1?settings.minDay1:settings.minOther)||b>minutes(end))return 'เวลาคู่นี้อยู่นอกช่วงแข่งขัน';
  const conversion=(f?.id==='F2'||f?.id==='F3')&&Number(settings.convertDay)>0;
  const at=conversion?Number(settings.convertDay)*1440+minutes(settings.convertTime):Infinity;
  const t=m.day*1440+a;
@@ -114,7 +120,7 @@ function check(m,all,fields,settings){
    const same=n.level===m.level&&n.type===m.type, sameSport=n.sport===m.sport;
    if(same&&sameSport&&m.stage===n.stage&&['group','league'].includes(m.stage)&&[n.home,n.away].includes(m.home)&&[n.home,n.away].includes(m.away))return 'มีคู่แข่งขันนี้ในรอบเดียวกันแล้ว';
    if(Number(n.day)!==m.day)continue;
-   const c=minutes(n.start),d=c+duration(n.sport,n.level);
+   const c=minutes(n.start),d=c+duration(n,settings);
    const anchored=same&&['football','volleyball'].includes(m.sport)&&['football','volleyball'].includes(n.sport);
    const repeat=same&&sameSport&&[n.home,n.away].some(team=>team===m.home||team===m.away);
    if(n.field===m.field&&a<d&&c<b)return 'สนามมีคิวชนกับ '+n.home+' พบ '+n.away;
@@ -128,7 +134,7 @@ document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
  if(b.dataset.view){location.hash=b.dataset.view;setView(b.dataset.view);}
  if(b.dataset.day){day=+b.dataset.day;render();}
- if(b.dataset.edit){const match=data.matches.find(x=>x.id===b.dataset.edit);if(match)edit(match);}
+ if(b.dataset.edit){const match=data.matches.find(x=>x.id===b.dataset.edit);if(match?.managed&&gas){window.open('https://moominoom.github.io/naklang3-sports-2569/admin.html','_blank','noopener');return;}if(match)edit(match);}
  if(b.id==='add')edit();
  if(b.id==='cancel')el('editor').close();
  if(b.id==='logout'){key='';loadData().catch(e=>say(e.message,true));}

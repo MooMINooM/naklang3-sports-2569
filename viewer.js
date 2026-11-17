@@ -2,7 +2,7 @@ import {readSports} from './sports-api.js';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, standings,
-} from './sports-data.js';
+} from './sports-data.js?v=20261117-bracket';
 
 const content = document.querySelector('#content');
 const featured = document.querySelector('#featured');
@@ -28,7 +28,7 @@ function select(id, label, values, placeholder) {
 
 function matchCard(match, {showDay = false} = {}) {
   const scored = hasScore(match);
-  const end = clock(minutes(match.start) + duration(match.sport, match.level));
+  const end = clock(minutes(match.start) + duration(match, data.settings));
   const timing = showDay ? DAYS[match.day] + ' · ' + match.start + ' น.' : match.start + '–' + end + ' น.';
   const stage = STAGES[match.stage] + (match.group ? ' · กลุ่ม ' + match.group : '');
   const score = scored
@@ -43,7 +43,7 @@ function matchCard(match, {showDay = false} = {}) {
     '<strong class="away">' + esc(match.away) + '</strong></div>' +
     '<div class="match-foot"><span><b class="time">' + esc(timing) + '</b><span class="field">' +
     esc(fieldName(data.fields, match.field)) + '</span></span><span><b class="match-state' +
-    (scored ? ' finished">จบการแข่งขัน' : '">รอแข่งขัน') + '</b><span class="stage">' + esc(stage) +
+    (scored ? ' finished">' + (match.winnerSide ? 'ชนะ ' + esc(match[match.winnerSide]) : 'เสมอ') : '">รอแข่งขัน') + '</b><span class="stage">' + esc(stage) +
     '</span></span></div></article>';
 }
 
@@ -99,13 +99,19 @@ function results() {
       lines.join('') + '</tbody></table></div>';
   });
 
+  const qualifierLines = (data.qualifiers || []).filter(q => filters.resultSport === q.sport).map(q => '<li>' +
+    esc(LEVELS[q.level]) + ' · ' + esc(TYPES[q.type]) + ' · ' +
+    (q.pendingTie ? 'รอผลตัดสินอันดับกรณีสถิติเท่ากัน' : esc(q.team) + ' (สาย ' + esc(q.group) + ')') + '</li>');
+  const qualifierPanel = qualifierLines.length ? '<div class="table-panel"><h3>รองแชมป์สายที่ดีที่สุด</h3><ul>' +
+    qualifierLines.join('') + '</ul></div>' : '';
+
   return '<section aria-labelledby="results-title"><div class="section-heading"><h2 id="results-title">ผลและอันดับ</h2>' +
     '<small>' + scores.length + ' คู่ที่มีผล</small></div><div class="filter-panel">' +
     sportButtons('resultSport') + '</div>' +
     (!filters.resultSport && data.matches.length ? '<p class="standings-note">เลือกชนิดกีฬาเพื่อดูตารางอันดับ</p>' : '') +
     (scores.length ? '<div class="fixture-grid">' + scores.map(match => matchCard(match, {showDay: true})).join('') + '</div>' :
       '<p class="empty">ยังไม่มีผลการแข่งขันที่เผยแพร่</p>') +
-    (tables.length ? '<div class="table-panel"><h3>อันดับเบื้องต้น</h3><p>ฟุตบอลชนะ 3 คะแนน เสมอ 1 คะแนน กีฬาอื่นเรียงตามจำนวนชนะ</p>' +
+    qualifierPanel + (tables.length ? '<div class="table-panel"><h3>อันดับเบื้องต้น</h3><p>ฟุตบอลชนะ 3 คะแนน เสมอ 1 คะแนน กีฬาอื่นนับจำนวนชนะ แล้วเทียบผลต่างและคะแนนที่ทำได้</p>' +
       tables.join('') + '</div>' : '') + '</section>';
 }
 

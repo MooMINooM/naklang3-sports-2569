@@ -9,7 +9,12 @@ const entities = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&
 
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => entities[char]);
 export const hasScore = match => match.homeScore !== '' && match.awayScore !== '';
-export const duration = (sport, level) => sport === 'football' ? durations.football[level] : durations[sport];
+export function duration({sport, level, stage}, settings) {
+  const groupMinutes = Number(settings.volleyballUpperGroupMinutes);
+  if (sport === 'volleyball' && level === 'upper' && stage === 'group' &&
+      Number.isInteger(groupMinutes) && groupMinutes > 0) return groupMinutes;
+  return sport === 'football' ? durations.football[level] : durations[sport];
+}
 export const minutes = time => {
   const [hour, minute] = time.split(':').map(Number);
   return hour * 60 + minute;
@@ -36,21 +41,24 @@ export function standings(matches, sport) {
     if (!groups.has(groupKey)) groups.set(groupKey, {match, teams: new Map()});
     const {teams} = groups.get(groupKey);
     for (const [name, score, opponent] of [[match.home, match.homeScore, match.awayScore], [match.away, match.awayScore, match.homeScore]]) {
-      if (!teams.has(name)) teams.set(name, {name, played: 0, wins: 0, ties: 0, losses: 0});
+      if (!teams.has(name)) teams.set(name, {name, played: 0, wins: 0, ties: 0, losses: 0, difference: 0, goals: 0});
       if (!hasScore(match)) continue;
 
       const team = teams.get(name);
       team.played++;
+      team.difference += Number(score) - Number(opponent);
+      team.goals += Number(score);
       if (Number(score) > Number(opponent)) team.wins++;
       else if (Number(score) === Number(opponent)) team.ties++;
       else team.losses++;
     }
   }
 
+  const compare = (a, b) => b.points - a.points || b.difference - a.difference || b.goals - a.goals;
   return Array.from(groups.values(), ({match, teams}) => {
     const rows = Array.from(teams.values(), row => ({
       ...row, points: sport === 'football' ? row.wins * 3 + row.ties : row.wins,
-    })).sort((a, b) => b.points - a.points || a.name.localeCompare(b.name, 'th'));
-    return {match, rows: rows.map(row => ({...row, rank: rows.findIndex(other => other.points === row.points) + 1}))};
+    })).sort((a, b) => compare(a, b) || a.name.localeCompare(b.name, 'th'));
+    return {match, rows: rows.map(row => ({...row, rank: rows.findIndex(other => compare(other, row) === 0) + 1}))};
   });
 }

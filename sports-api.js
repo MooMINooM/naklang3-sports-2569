@@ -79,3 +79,4 @@ async function send(message) {
 
 export const readSports = (key = '') => send({action: 'read', key});
 export const saveMatch = (key, match) => send({action: 'save', key, match});
+export const saveDraw = (key, draw) => send({action: 'saveDraw', key, draw});

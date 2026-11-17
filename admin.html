@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
-  <link rel="stylesheet" href="admin.css">
-  <script type="module" src="admin.js"></script>
+  <link rel="stylesheet" href="admin.css?v=20261117-bracket">
+  <script type="module" src="admin.js?v=20261117-bracket"></script>
 </head>
 <body>
   <header class="top">
@@ -29,6 +29,7 @@
         <div class="actions">
           <button type="button" id="refresh">โหลดข้อมูลใหม่</button>
           <button type="button" id="logout">ออกจากระบบ</button>
+          <button type="button" id="open-draw">กรอกผลจับสลาก</button>
           <button type="button" id="new-match" class="primary">เพิ่มคู่แข่งขัน</button>
         </div>
       </div>
@@ -64,12 +65,29 @@
         <label>คะแนนทีมที่ 1 <input name="homeScore" type="number" min="0" max="999"></label>
         <label>คะแนนทีมที่ 2 <input name="awayScore" type="number" min="0" max="999"></label>
       </div>
+      <div id="tie-field" hidden><label>ผู้ชนะกรณีตัดสินเมื่อคะแนนเท่ากัน <select name="tieWinner"></select></label></div>
+      <p id="score-hint" class="status" role="status"></p>
       <datalist id="schools"></datalist>
       <label class="publish"><input name="published" type="checkbox"> แสดงคู่นี้ในหน้าผู้ชม</label>
       <p id="form-status" class="status" role="status"></p>
       <div class="actions form-actions">
         <button type="button" id="cancel-match">ยกเลิก</button>
         <button type="submit" id="save-match" class="primary">บันทึกคู่แข่งขัน</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="draw-dialog">
+    <form id="draw-form">
+      <h2>กรอกผลจับสลาก</h2>
+      <label>รายการแข่งขัน <select name="event" required></select></label>
+      <div id="draw-slots" class="form-grid"></div>
+      <label id="draw-tie">ลำดับตัดสินเมื่อสถิติเท่ากัน <input name="tieOrder" placeholder="A1, B2, C1" maxlength="80" aria-describedby="draw-tie-help">
+        <small id="draw-tie-help">ใช้เมื่อกรรมการตัดสินแล้ว ใส่รหัสทีมจากอันดับสูงไปต่ำตามผลตัดสิน</small>
+      </label>
+      <p id="draw-status" class="status" role="status"></p>
+      <div class="actions form-actions">
+        <button type="button" id="close-draw">ปิด</button>
+        <button type="submit" id="save-draw" class="primary">บันทึกผลจับสลาก</button>
       </div>
     </form>
   </dialog>
