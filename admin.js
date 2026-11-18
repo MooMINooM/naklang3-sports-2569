@@ -25,6 +25,7 @@ const publishedFilter = byId('published-filter');
 let data = blank;
 let key = '';
 let editing = null;
+let scoreOnly = false;
 let busy = false;
 let clearSets = false;
 const setGrid = byId('set-grid');
@@ -63,16 +64,20 @@ function render() {
 
   const rows = matches.map(match => {
     const end = clock(minutes(match.start) + duration(match, data.settings));
+    const detailed = match.scoreSets?.length ? setResult(match.scoreSets) : null;
     const score = hasScore(match) ? esc(match.homeScore) + ' – ' + esc(match.awayScore) + (usesSets(match.sport) ? ' เซต' : '') +
-      (match.scoreSets?.length ? '<small>' + match.scoreSets.map(pair => pair.join('–')).join(' / ') + '</small>' : '') +
+      (detailed ? '<small>' + match.scoreSets.map(pair => pair.join('–')).join(' / ') +
+        '<br>แต้มรวม ' + detailed.points.join('–') + '</small>' : '') +
       '<small>' + (match.winnerSide ? 'ชนะ: ' + esc(match[match.winnerSide]) : 'เสมอ') + '</small>' :
-      match.ready === false ? 'รอยืนยันทีม' : 'รอผล';
+      match.ready === false ? 'ยังระบุคู่แข่งขันไม่ครบ' : 'รอบันทึกผล';
     return '<tr><td><strong>' + DAYS[match.day] + '</strong><small>' + esc(match.start) + '–' + end +
       '</small></td><td><strong>' + esc(match.home) + ' พบ ' + esc(match.away) + '</strong><small>' +
       esc(SPORTS[match.sport]) + ' · ' + esc(LEVELS[match.level]) + esc(TYPES[match.type]) + ' · ' + esc(STAGES[match.stage]) +
       (match.group ? ' ' + esc(match.group) : '') + '</small></td><td>' + esc(fieldName(data.fields, match.field)) +
       '</td><td>' + score + '</td><td><span class="pill' + (match.published ? ' live">เผยแพร่แล้ว' : '">ฉบับร่าง') +
-      '</span></td><td><button type="button" data-edit="' + esc(match.id) + '">แก้ไข / ลงผล</button></td></tr>';
+      '</span></td><td><div class="row-actions"><button class="primary" type="button" data-score="' + esc(match.id) + '">' +
+      (hasScore(match) ? 'แก้ผล' : 'ลงผล') + '</button><button type="button" data-edit="' + esc(match.id) +
+      '">แก้ไขคิว</button></div></td></tr>';
   });
   list.innerHTML = '<div class="scroll"><table><thead><tr><th>วันและเวลา</th><th>คู่แข่งขัน</th><th>สนาม</th><th>ผล</th><th>สถานะ</th><th>จัดการ</th></tr></thead><tbody>' +
     rows.join('') + '</tbody></table></div>';
@@ -106,14 +111,30 @@ async function refresh() {
   }
 }
 
-function edit(match) {
+function edit(match, resultsOnly = false) {
   if (busy) return;
   editing = match || null;
+  scoreOnly = Boolean(match && resultsOnly);
+  byId('match-details').hidden = byId('match-details').disabled = scoreOnly;
+  byId('match-context').hidden = !scoreOnly;
+  byId('publish-match').hidden = scoreOnly;
+  fields.published.disabled = scoreOnly;
+  byId('save-match').textContent = scoreOnly ? 'บันทึกผล' : 'บันทึกคู่แข่งขัน';
+  byId('save-match').disabled = scoreOnly && match.ready === false;
+  byId('assign-from-score').hidden = !scoreOnly || match.ready !== false ||
+    !['group', 'league'].includes(match.stage);
+  if (scoreOnly) {
+    byId('match-context-teams').textContent = match.home + ' พบ ' + match.away;
+    byId('match-context-details').textContent = [
+      SPORTS[match.sport], LEVELS[match.level] + TYPES[match.type], STAGES[match.stage],
+      DAYS[match.day] + ' ' + match.start + ' น.',
+    ].join(' · ');
+  }
   const day = match?.day || Number(dayFilter.value) || 1;
   form.reset();
   clearSets = false;
   setFields.forEach((field, i) => { field.value = match?.scoreSets?.[Math.floor(i / 2)]?.[i % 2] ?? ''; });
-  byId('form-title').textContent = match ? 'แก้ไขคู่และบันทึกผล' : 'เพิ่มคู่แข่งขัน';
+  byId('form-title').textContent = scoreOnly ? 'บันทึกผล' + ' ' + SPORTS[match.sport] : match ? 'แก้ไขคู่แข่งขัน' : 'เพิ่มคู่แข่งขัน';
   fields.day.innerHTML = options(DAYS, day);
   fields.sport.innerHTML = options(SPORTS, match?.sport || sportFilter.value || 'football');
   fields.level.innerHTML = options(LEVELS, match?.level || 'upper');
@@ -185,9 +206,14 @@ form.addEventListener('change', event => {
 });
 form.addEventListener('submit', async event => {
   event.preventDefault();
-  if (busy || !key) return;
+  if (busy || !key || (scoreOnly && editing.ready === false)) return;
   const values = new FormData(form);
   const match = Object.fromEntries(values);
+  if (scoreOnly) {
+    for (const field of ['day', 'start', 'sport', 'level', 'type', 'stage', 'group', 'field', 'home', 'away']) {
+      match[field] = editing[field];
+    }
+  }
   match.id = editing?.id || '';
   if (editing?.managed) {
     for (const name of managedFields) match[name] = editing[name];
@@ -198,10 +224,14 @@ form.addEventListener('submit', async event => {
   match.home = match.home.trim();
   match.away = match.away.trim();
   match.group = match.stage === 'group' ? match.group : '';
-  match.published = values.has('published');
+  match.published = scoreOnly ? editing.published : values.has('published');
   for (const field of ['homeScore', 'awayScore']) match[field] = match[field] ? Number(match[field]) : '';
 
-  if (usesSets(match.sport)) {
+  if (editing && !scoreOnly) {
+    match.homeScore = editing.homeScore;
+    match.awayScore = editing.awayScore;
+    match.tieWinner = editing.tieWinner;
+  } else if (usesSets(match.sport)) {
     if (data.formatVersion < 5) {
       status('form-status', 'กรุณาโหลดหน้าใหม่หลังระบบเปิดบันทึกแต้มรายเซต', true);
       return;
@@ -229,7 +259,7 @@ form.addEventListener('submit', async event => {
     data = await readSports(key);
     dialog.close();
     render();
-    status('workspace-status', 'บันทึกคู่แข่งขันใน Google Sheets แล้ว');
+    status('workspace-status', scoreOnly ? 'บันทึกผลการแข่งขันแล้ว' : 'บันทึกคู่แข่งขันใน Google Sheets แล้ว');
   } catch (error) {
     status('form-status', error.message, true);
   } finally {
@@ -243,9 +273,14 @@ byId('refresh').addEventListener('click', refresh);
 byId('new-match').addEventListener('click', () => edit());
 for (const filter of [dayFilter, sportFilter, publishedFilter]) filter.addEventListener('change', render);
 list.addEventListener('click', event => {
-  const id = event.target.closest('[data-edit]')?.dataset.edit;
+  const action = event.target.closest('[data-edit], [data-score]');
+  const id = action?.dataset.score || action?.dataset.edit;
   const match = id && data.matches.find(row => row.id === id);
-  if (match) edit(match);
+  if (match) edit(match, Boolean(action.dataset.score));
+});
+byId('assign-from-score').addEventListener('click', () => {
+  dialog.close();
+  byId('open-team-numbers').click();
 });
 
 function enteredSets() {
@@ -262,7 +297,20 @@ function enteredSets() {
 function updateScoreHint(tieWinner = fields.tieWinner.value) {
   const setSport = usesSets(fields.sport.value);
   const unresolved = editing?.ready === false;
-  byId('single-home').hidden = byId('single-away').hidden = setSport;
+  const waiting = ['group', 'league'].includes(fields.stage.value)
+    ? 'กรอกชื่อโรงเรียนให้ครบทั้งสองทีมที่เมนูกำหนดเลขทีมโรงเรียนก่อนบันทึกผล'
+    : 'รอผลรอบก่อนหน้าเพื่อยืนยันคู่แข่งขัน';
+  if (editing && !scoreOnly) {
+    byId('single-scores').hidden = byId('set-scores').hidden = byId('tie-field').hidden = true;
+    fields.homeScore.disabled = fields.awayScore.disabled = byId('set-scores').disabled = fields.tieWinner.disabled = true;
+    fields.tieWinner.required = false;
+    status('score-hint', '');
+    return;
+  }
+  const label = fields.sport.value === 'football' ? 'ประตู' : 'แต้ม';
+  document.querySelector('#single-home span').textContent = label + ' · ' + (fields.home.value || 'ทีมที่ 1');
+  document.querySelector('#single-away span').textContent = label + ' · ' + (fields.away.value || 'ทีมที่ 2');
+  byId('single-scores').hidden = setSport;
   fields.homeScore.disabled = fields.awayScore.disabled = setSport || unresolved;
   byId('set-scores').hidden = !setSport;
   byId('set-scores').disabled = unresolved;
@@ -278,7 +326,7 @@ function updateScoreHint(tieWinner = fields.tieWinner.value) {
       const sets = enteredSets();
       const result = setResult(sets);
       const legacy = editing && hasScore(editing) && !editing.scoreSets?.length && !clearSets;
-      const message = unresolved ? 'รอผลจับสลากหรือผลรอบก่อนหน้า' : sets.length ?
+      const message = unresolved ? waiting : sets.length ?
         'เซต ' + result.wins.join('–') + ' · แต้มรวม ' + result.points.join('–') + (result.finished ?
           ' · ผู้ชนะ ' + names[result.wins[0] === 2 ? 0 : 1] : ' · ยังไม่จบการแข่งขัน') :
         legacy ? 'ผลเดิม ' + editing.homeScore + '–' + editing.awayScore + ' เซต ยังไม่มีแต้มรายเซต' :
@@ -299,7 +347,7 @@ function updateScoreHint(tieWinner = fields.tieWinner.value) {
   fields.tieWinner.disabled = !needsWinner;
   fields.tieWinner.required = needsWinner;
   byId('tie-field').hidden = !needsWinner;
-  const message = fields.homeScore.disabled ? 'รอผลจับสลากหรือผลรอบก่อนหน้า' :
+  const message = unresolved ? waiting :
     !complete ? '' : needsWinner ? 'ระบุผู้ชนะตามผลการตัดสิน' : tied ? 'ผลการแข่งขันเสมอ' :
     'ผู้ชนะ: ' + (Number(home) > Number(away) ? fields.home.value : fields.away.value);
   status('score-hint', message);

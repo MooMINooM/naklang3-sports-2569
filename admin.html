@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
-  <link rel="stylesheet" href="admin.css?v=20261118-set-scoring">
-  <script type="module" src="admin.js?v=20261118-set-scoring"></script>
+  <link rel="stylesheet" href="admin.css?v=20261118-admin-results">
+  <script type="module" src="admin.js?v=20261118-admin-results"></script>
 </head>
 <body>
   <header class="top">
@@ -45,6 +45,11 @@
             </select>
           </label>
         </div>
+        <div class="results-guide">
+          <strong>บันทึกผลการแข่งขัน</strong>
+          <span>ฟุตบอลกรอกประตู · วอลเลย์บอลและตะกร้อกรอกแต้มรายเซต</span>
+          <a href="./#standings">ดูตารางคะแนนฟุตบอล</a>
+        </div>
         <div id="matches"></div>
       </section>
     </section>
@@ -52,7 +57,13 @@
   <dialog id="match-dialog">
     <form id="match-form">
       <h2 id="form-title"></h2>
-      <div class="form-grid">
+      <div id="match-context" class="match-context" hidden>
+        <strong id="match-context-teams"></strong>
+        <p id="match-context-details"></p>
+        <button type="button" id="assign-from-score" hidden>กำหนดเลขทีมโรงเรียน</button>
+      </div>
+      <fieldset id="match-details" class="form-grid">
+        <legend class="sr-only">ข้อมูลคู่แข่งขัน</legend>
         <label>วันแข่งขัน <select name="day" required></select></label>
         <label>เวลาเริ่ม <input name="start" type="time" required></label>
         <label>กีฬา <select name="sport" required></select></label>
@@ -63,8 +74,10 @@
         <label>ทีมที่ 2 <input name="away" list="schools" maxlength="100" required></label>
         <label>รอบแข่งขัน <select name="stage" required></select></label>
         <label id="group-field">สาย <select name="group"><option value="A">กลุ่ม A</option><option value="B">กลุ่ม B</option><option value="C">กลุ่ม C</option></select></label>
-        <label id="single-home">คะแนนทีมที่ 1 <input name="homeScore" type="number" min="0" max="999"></label>
-        <label id="single-away">คะแนนทีมที่ 2 <input name="awayScore" type="number" min="0" max="999"></label>
+      </fieldset>
+      <div id="single-scores" class="form-grid">
+        <label id="single-home"><span></span><input name="homeScore" type="number" min="0" max="999"></label>
+        <label id="single-away"><span></span><input name="awayScore" type="number" min="0" max="999"></label>
       </div>
       <fieldset id="set-scores" hidden>
         <legend>แต้มรายเซต · ชนะ 2 ใน 3 เซต</legend>
@@ -74,7 +87,7 @@
       <div id="tie-field" hidden><label>ผู้ชนะกรณีตัดสินเมื่อคะแนนเท่ากัน <select name="tieWinner"></select></label></div>
       <p id="score-hint" class="status" role="status"></p>
       <datalist id="schools"></datalist>
-      <label class="publish"><input name="published" type="checkbox"> แสดงคู่นี้ในหน้าผู้ชม</label>
+      <label class="publish" id="publish-match"><input name="published" type="checkbox"> แสดงคู่นี้ในหน้าผู้ชม</label>
       <p id="form-status" class="status" role="status"></p>
       <div class="actions form-actions">
         <button type="button" id="cancel-match">ยกเลิก</button>
