@@ -1,8 +1,8 @@
 import {readSports} from './sports-api.js';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
-  minutes, clock, ordered, fieldName, options, standings, usesSets, setResult,
-} from './sports-data.js?v=20261118-set-scoring';
+  minutes, clock, ordered, fieldName, options, standings, usesSets,
+} from './sports-data.js?v=20261118-school-logos';
 
 const content = document.getElementById('competition-content');
 const search = document.getElementById('team-search');
@@ -101,13 +101,28 @@ function signed(value) {
   return value > 0 ? '+' + value : value < 0 ? '−' + Math.abs(value) : '0';
 }
 
-function setBreakdown(match, reverse = false) {
-  if (!match.scoreSets?.length) return '';
-  const sets = reverse ? match.scoreSets.map(([home, away]) => [away, home]) : match.scoreSets;
-  const {points} = setResult(sets);
-  return '<div class="set-breakdown">' + sets.map((pair, i) =>
-    '<span>เซต ' + (i + 1) + ' <b>' + pair.join('–') + '</b></span>').join('') +
-    '<strong>แต้มรวม ' + points.join('–') + '</strong></div>';
+function schoolMark(name) {
+  const raw = Object.hasOwn(data.schoolLogos || {}, name) ? data.schoolLogos[name] : '';
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    if (url.protocol === 'https:' && !url.username && !url.password) {
+      return '<img class="school-mark" src="' + esc(url.href) + '" alt="" width="28" height="28" loading="lazy" referrerpolicy="no-referrer">';
+    }
+  } catch (error) {
+    return '';
+  }
+  return '';
+}
+
+function schoolName(name) {
+  return '<span class="school-name">' + schoolMark(name) + '<span>' + esc(name) + '</span></span>';
+}
+
+function resultCard(match) {
+  const tiebreak = match.winnerSide && match.homeScore === match.awayScore;
+  return '<article class="result-card ' + match.sport + '">' + matchup(match, true) +
+    (tiebreak ? '<small>ชนะในการตัดสิน · ' + esc(match[match.winnerSide]) + '</small>' : '') + '</article>';
 }
 
 function matchup(match, scored) {
@@ -115,8 +130,8 @@ function matchup(match, scored) {
     esc(match.awayScore) + '">' + esc(match.homeScore) + '<span aria-hidden="true">–</span>' + esc(match.awayScore) + (usesSets(match.sport) ? '<small aria-hidden="true">เซต</small>' : '') + '</span>' :
     '<span class="versus">พบ</span>';
   return '<div class="matchup"><strong class="team' + (match.winnerSide === 'home' ? ' winner' : '') +
-    '">' + esc(match.home) + '</strong>' + scores + '<strong class="team' +
-    (match.winnerSide === 'away' ? ' winner' : '') + '">' + esc(match.away) + '</strong></div>';
+    '">' + schoolName(match.home) + '</strong>' + scores + '<strong class="team' +
+    (match.winnerSide === 'away' ? ' winner' : '') + '">' + schoolName(match.away) + '</strong></div>';
 }
 
 function fixture(match, compact = false) {
@@ -125,12 +140,7 @@ function fixture(match, compact = false) {
   const time = esc(match.start) + '–' + esc(end) + ' น.';
   const when = scored ? esc(DAYS[match.day]) + ' · ' + time : time;
   const venue = esc(fieldName(data.fields, match.field));
-  const outcome = match.winnerSide ? 'ชนะ ' + esc(match[match.winnerSide]) : 'เสมอ';
-  const difference = Number(match.homeScore) - Number(match.awayScore);
-  const state = scored ? '<span class="match-state played">' + outcome +
-    '</span>' + (usesSets(match.sport) ? '' : '<span class="score-difference" aria-label="ผลต่างแต้มทีมแรก ' + signed(difference) +
-    ' ทีมที่สอง ' + signed(-difference) + '">ผลต่าง ' + signed(difference) + ' / ' + signed(-difference) + '</span>') :
-    match.ready === false ? '<span class="match-state">รอผลจับสลากหรือรอบก่อนหน้า</span>' : '';
+  const state = !scored && match.ready === false ? '<span class="match-state">รอผลจับสลากหรือรอบก่อนหน้า</span>' : '';
   if (compact && !scored) {
     return '<article class="fixture preview-match ' + match.sport + '"><div class="preview-when">' +
       '<strong class="fixture-time">' + time + '</strong><span>' + venue + '</span></div>' +
@@ -138,7 +148,7 @@ function fixture(match, compact = false) {
       esc(seasonLabel(match)) + '</span></div>' + matchup(match, false) + '</div></article>';
   }
   return '<article class="fixture ' + match.sport + '"><div class="fixture-meta">' + badge(match.sport) +
-    '<span>' + esc(seasonLabel(match)) + '</span></div>' + matchup(match, scored) + setBreakdown(match) +
+    '<span>' + esc(seasonLabel(match)) + '</span></div>' + matchup(match, scored) +
     '<div class="fixture-foot"><span class="fixture-time">' + when + '</span><span>' + venue + '</span>' +
     state + '</div></article>';
 }
@@ -172,6 +182,7 @@ function groupCards(matches, sport, compact = false) {
   const visible = compact ? [groups.find(group => group.rows.some(row => row.played)) || groups[0]] : groups;
   return '<div class="group-grid">' + visible.map(({match, rows}) => {
     const played = rows.some(row => row.played);
+    const showSetPoints = !compact && usesSets(sport) && rows.some(row => row.setMatches);
     const title = LEVELS[match.level] + TYPES[match.type] + ' · ' +
       (match.group ? 'สาย ' + match.group : 'พบกันหมด');
     const label = compact ? SPORTS[sport] + ' · ' + title : title;
@@ -179,13 +190,17 @@ function groupCards(matches, sport, compact = false) {
       '<div class="table-scroll" tabindex="0" role="region" aria-label="เลื่อนดูตารางคะแนน"><table aria-label="' + esc(label) + '"><thead><tr><th scope="col">อันดับ</th>' +
       '<th scope="col">ทีม</th><th scope="col">แข่ง</th><th scope="col">ชนะ</th>' +
       (compact ? '' : '<th scope="col">เสมอ</th><th scope="col">แพ้</th>') +
-      '<th scope="col">' + forLabel + '</th><th scope="col">' + againstLabel + '</th><th scope="col">ผลต่าง</th><th scope="col">คะแนน</th></tr></thead><tbody>' +
-      rows.map(row => '<tr><td>' + (row.played ? row.rank : '–') + '</td><th scope="row">' + esc(row.name) +
+      '<th scope="col">' + forLabel + '</th><th scope="col">' + againstLabel + '</th><th scope="col">ผลต่าง</th>' +
+      (showSetPoints ? '<th scope="col">แต้มได้</th><th scope="col">แต้มเสีย</th>' : '') +
+      '<th scope="col">คะแนน</th></tr></thead><tbody>' +
+      rows.map(row => '<tr><td>' + (row.played ? row.rank : '–') + '</td><th scope="row">' + schoolName(row.name) +
         '</th><td>' + row.played + '</td><td>' + row.wins + '</td>' +
         (compact ? '' : '<td>' + row.ties + '</td><td>' + row.losses + '</td>') +
         '<td>' + row.goals + '</td><td>' + (row.goals - row.difference) + '</td><td>' +
-        signed(row.difference) + '</td><td><strong>' + row.points + '</strong></td></tr>').join('') + '</tbody></table></div>' :
-      '<ul class="team-list">' + rows.map(row => '<li>' + esc(row.name) + '</li>').join('') + '</ul>') + '</section>';
+        signed(row.difference) + '</td>' +
+        (showSetPoints ? '<td>' + (row.setMatches ? row.setPoints : '–') + '</td><td>' +
+          (row.setMatches ? row.setAgainst : '–') + '</td>' : '') + '<td><strong>' + row.points + '</strong></td></tr>').join('') + '</tbody></table></div>' :
+      '<ul class="team-list">' + rows.map(row => '<li>' + schoolName(row.name) + '</li>').join('') + '</ul>') + '</section>';
   }).join('') + '</div>';
 }
 
@@ -237,7 +252,7 @@ function homepage(route) {
     panel(scores.length ? 'ตารางคะแนน' : 'ทีมและสาย', '📊', link('standings', {sport: selectedSport}), 'ดูทุกสาย',
       miniTeams, 'teams-panel') +
     panel('ผลการแข่งขัน', '🏆', '#results', 'ดูผลทั้งหมด', (scores.length ?
-      '<div class="preview-fixtures">' + scores.slice(-3).reverse().map(match => fixture(match, true)).join('') + '</div>' :
+      '<div class="preview-fixtures">' + scores.slice(-3).reverse().map(resultCard).join('') + '</div>' :
       empty('ยังไม่มีผลการแข่งขันที่เผยแพร่')) +
       '<a class="related-link" href="#schools">ดูผลรายโรงเรียน ›</a>', 'results-panel') + '</div>';
 }
@@ -266,7 +281,11 @@ function results(route) {
     heading('ผลการแข่งขัน', scores.length + ' คู่ที่ประกาศผลแล้ว') +
     '<a class="related-link" href="#schools">ดูผลรายโรงเรียน ›</a>') +
     filters(route, {sport: route.page !== 'sport'}) +
-    (scores.length ? '<div class="fixtures result-list">' + scores.map(match => fixture(match)).join('') + '</div>' :
+    (scores.length ? '<div class="fixtures result-list">' + sports.map(sport => {
+      const games = scores.filter(match => match.sport === sport);
+      return games.length ? '<section class="sport-results"><h2>' + badge(sport) + '</h2>' +
+        games.map(resultCard).join('') + '</section>' : '';
+    }).join('') + '</div>' :
       empty('ยังไม่มีผลการแข่งขันที่เผยแพร่ตามตัวกรองนี้'));
 }
 
@@ -314,41 +333,23 @@ function schoolMatch(match, school) {
   const against = Number(home ? match.awayScore : match.homeScore);
   const outcome = match.winnerSide ? (match.winnerSide === side ? 'win' : 'loss') :
     own > against ? 'win' : own < against ? 'loss' : 'draw';
-  return {match, home, own, against, outcome, opponent: home ? match.away : match.home};
+  return {match, own, against, outcome, opponent: home ? match.away : match.home};
 }
 
 function schoolStats(games) {
-  const counts = {win: 0, draw: 0, loss: 0, own: 0, against: 0};
-  for (const game of games) {
-    counts[game.outcome]++;
-    counts.own += game.own;
-    counts.against += game.against;
-  }
+  const counts = {win: 0, draw: 0, loss: 0};
+  for (const game of games) counts[game.outcome]++;
   return counts;
 }
 
 function schoolResultGroup(sport, games) {
-  const stats = schoolStats(games);
-  const labels = {win: 'ชนะ', draw: 'เสมอ', loss: 'แพ้'};
-  const setSport = usesSets(sport);
-  const [forLabel, againstLabel] = sport === 'football' ? ['ประตูได้', 'ประตูเสีย'] :
-    setSport ? ['เซตได้', 'เซตเสีย'] : ['แต้มได้', 'แต้มเสีย'];
-  const withSets = games.filter(game => game.match.scoreSets?.length);
-  const points = withSets.reduce((sum, {match, home}) => {
-    const values = setResult(match.scoreSets).points;
-    return [sum[0] + values[home ? 0 : 1], sum[1] + values[home ? 1 : 0]];
-  }, [0, 0]);
-  const totalPoints = withSets.length ? '<span>แต้มรวม ' + points.join('–') +
-    (withSets.length === games.length ? '' : ' (' + withSets.length + ' คู่ที่มีแต้มรายเซต)') + '</span>' : '';
   return '<section class="group-card school-sport ' + sport + '"><h2>' + badge(sport) + '</h2>' +
-    '<p class="school-totals">ชนะ ' + stats.win + ' · เสมอ ' + stats.draw + ' · แพ้ ' + stats.loss +
-    '<span>' + forLabel + ' ' + stats.own + ' · ' + againstLabel + ' ' + stats.against + ' · ผลต่าง ' +
-    signed(stats.own - stats.against) + '</span>' + totalPoints + '</p><div class="school-games">' +
-    games.map(({match, home, own, against, outcome, opponent}) =>
-      '<article class="school-game"><div><small>' + esc(seasonLabel(match)) + ' · ' + DAYS[match.day] +
-      '</small><strong>พบ ' + esc(opponent) + '</strong></div><div class="school-score"><span class="score" aria-label="' + forLabel + ' ' +
-      own + ' ' + againstLabel + ' ' + against + '">' + own + ' – ' + against + (setSport ? '<small aria-hidden="true">เซต</small>' : '') + '</span><small class="outcome ' + outcome +
-      '">' + labels[outcome] + ' · ' + signed(own - against) + '</small></div>' + setBreakdown(match, !home) + '</article>').join('') + '</div></section>';
+    '<div class="school-games">' + games.map(({match, own, against, outcome, opponent}) => {
+      const tiebreak = match.winnerSide && own === against;
+      return '<article class="school-game">' + schoolName(opponent) + '<div class="school-score"><span class="score">' +
+        own + ' – ' + against + (usesSets(sport) ? '<small aria-hidden="true">เซต</small>' : '') + '</span>' +
+        (tiebreak ? '<small>' + (outcome === 'win' ? 'ชนะ' : 'แพ้') + 'ในการตัดสิน</small>' : '') + '</div></article>';
+    }).join('') + '</div></section>';
 }
 
 function schoolsPage(route) {
@@ -366,14 +367,14 @@ function schoolsPage(route) {
   if (!active) {
     return heading('ผลการแข่งขันรายโรงเรียน') + filter +
       '<div class="school-directory">' + schools.map(name => '<a href="' + esc(link('schools', {school: name})) +
-      '">' + esc(name) + ' <span aria-hidden="true">›</span></a>').join('') + '</div>';
+      '">' + schoolName(name) + ' <span aria-hidden="true">›</span></a>').join('') + '</div>';
   }
   const all = ordered(data.matches.filter(match => match.home === active || match.away === active));
   const games = all.filter(hasScore).reverse().map(match => schoolMatch(match, active));
   const stats = schoolStats(games);
   const program = all.length ? '<a class="related-link" href="' +
     esc(link('schedule', {query: active, day: '0'})) + '">ดูโปรแกรมของโรงเรียน ›</a>' : '';
-  return heading('ผลการแข่งขันรายโรงเรียน', active) + filter + program +
+  return heading('ผลการแข่งขันรายโรงเรียน') + '<p class="selected-school">' + schoolName(active) + '</p>' + filter + program +
     (games.length ? '<div class="school-summary" aria-label="สรุปผลการแข่งขัน"><span>แข่ง <b>' + games.length +
       '</b></span><span>ชนะ <b>' + stats.win + '</b></span><span>เสมอ <b>' + stats.draw +
       '</b></span><span>แพ้ <b>' + stats.loss + '</b></span></div><div class="group-grid">' +
@@ -386,7 +387,7 @@ function schoolsPage(route) {
 function venues() {
   return heading('โรงเรียนและสนาม') + '<div class="directory"><section class="group-card"><h2>โรงเรียนในเครือข่าย</h2>' +
     '<ul class="team-list">' + data.schools.map(name => '<li><a href="' + esc(link('schools', {school: name})) +
-      '">' + esc(name) + '</a></li>').join('') +
+      '">' + schoolName(name) + '</a></li>').join('') +
     '</ul></section><section class="group-card"><h2>สนามแข่งขัน</h2><ul class="venue-list">' +
     data.fields.map(field => '<li>' + badge(field.sport) + '<div><strong>' + esc(field.name) + '</strong><small>' +
       esc(field.levels.split(',').map(level => LEVELS[level]).filter(Boolean).join(' · ')) + '</small></div></li>').join('') +
@@ -474,6 +475,9 @@ document.querySelector('.skip').addEventListener('click', event => {
   event.preventDefault();
   document.getElementById('content').focus();
 });
+content.addEventListener('error', event => {
+  if (event.target.matches('.school-mark')) event.target.hidden = true;
+}, true);
 document.getElementById('reload').addEventListener('click', refresh);
 render();
 refresh();

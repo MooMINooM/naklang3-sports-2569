@@ -264,3 +264,13 @@ body[data-page="home"] .site-footer::before {
 .score > small { align-self: center; color: inherit; font: 600 11px/1 var(--text); }
 .school-game { flex-wrap: wrap; }
 .school-game .set-breakdown { flex: 0 0 100%; }
+
+.school-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.school-mark { flex: 0 0 28px; width: 28px; height: 28px; object-fit: contain; }
+.team:last-child .school-name { flex-direction: row-reverse; }
+.selected-school { font-weight: 750; font-size: 19px; }
+.result-card { padding: 8px 11px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.result-card .team { font-size: 15px; }
+.result-card > small { display: block; text-align: center; color: var(--muted); }
+.sport-results { display: grid; gap: 7px; }
+.sport-results > h2 { margin-bottom: 2px; }

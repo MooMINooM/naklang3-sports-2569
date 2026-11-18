@@ -56,12 +56,19 @@ export function standings(matches, sport) {
     const groupKey = [match.level, match.type, match.group].join('|');
     if (!groups.has(groupKey)) groups.set(groupKey, {match, teams: new Map()});
     const {teams} = groups.get(groupKey);
-    for (const [name, score, opponent] of [[match.home, match.homeScore, match.awayScore], [match.away, match.awayScore, match.homeScore]]) {
-      if (!teams.has(name)) teams.set(name, {name, played: 0, wins: 0, ties: 0, losses: 0, difference: 0, goals: 0});
+    const points = match.scoreSets?.length ? setResult(match.scoreSets).points : null;
+    const sides = [[match.home, match.homeScore, match.awayScore], [match.away, match.awayScore, match.homeScore]];
+    for (const [side, [name, score, opponent]] of sides.entries()) {
+      if (!teams.has(name)) teams.set(name, {name, played: 0, wins: 0, ties: 0, losses: 0, difference: 0, goals: 0, setPoints: 0, setAgainst: 0, setMatches: 0});
       if (!hasScore(match)) continue;
 
       const team = teams.get(name);
       team.played++;
+      if (points) {
+        team.setPoints += points[side];
+        team.setAgainst += points[1 - side];
+        team.setMatches++;
+      }
       team.difference += Number(score) - Number(opponent);
       team.goals += Number(score);
       if (Number(score) > Number(opponent)) team.wins++;

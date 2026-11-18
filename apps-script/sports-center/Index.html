@@ -120,8 +120,9 @@ function check(m,all,fields,settings){
    if(same&&sameSport&&m.stage===n.stage&&['group','league'].includes(m.stage)&&[n.home,n.away].includes(m.home)&&[n.home,n.away].includes(m.away))return 'มีคู่แข่งขันนี้ในรอบเดียวกันแล้ว';
    if(Number(n.day)!==m.day)continue;
    const c=minutes(n.start),d=c+duration(n,settings);
-   const anchored=same&&['football','volleyball'].includes(m.sport)&&['football','volleyball'].includes(n.sport);
    const repeat=same&&sameSport&&[n.home,n.away].some(team=>team===m.home||team===m.away);
+   const anchored=same&&['football','volleyball'].includes(m.sport)&&
+     ['football','volleyball'].includes(n.sport)&&(!sameSport||repeat||m.stage!==n.stage);
    if(n.field===m.field&&a<d&&c<b)return 'สนามมีคิวชนกับ '+n.home+' พบ '+n.away;
    if((anchored&&a<d+15&&c<b+15)||(repeat&&a<d&&c<b))return 'คิวชนหรือเวลาพักไม่ครบกับ '+n.home+' พบ '+n.away;
  }

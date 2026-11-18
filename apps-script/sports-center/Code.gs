@@ -36,8 +36,9 @@ function check(m,all,fields,settings){
    if(same&&sameSport&&m.stage===n.stage&&['group','league'].includes(m.stage)&&[n.home,n.away].includes(m.home)&&[n.home,n.away].includes(m.away))return 'มีคู่แข่งขันนี้ในรอบเดียวกันแล้ว';
    if(Number(n.day)!==m.day)continue;
    const c=minutes(n.start),d=c+duration(n,settings);
-   const anchored=same&&['football','volleyball'].includes(m.sport)&&['football','volleyball'].includes(n.sport);
    const repeat=same&&sameSport&&[n.home,n.away].some(team=>team===m.home||team===m.away);
+   const anchored=same&&['football','volleyball'].includes(m.sport)&&
+     ['football','volleyball'].includes(n.sport)&&(!sameSport||repeat||m.stage!==n.stage);
    if(n.field===m.field&&a<d&&c<b)return 'สนามมีคิวชนกับ '+n.home+' พบ '+n.away;
    if((anchored&&a<d+15&&c<b+15)||(repeat&&a<d&&c<b))return 'คิวชนหรือเวลาพักไม่ครบกับ '+n.home+' พบ '+n.away;
  }
@@ -106,7 +107,7 @@ function setupSports_(){
  book.setSpreadsheetTimeZone('Asia/Bangkok');
  createTable_(book,'Matches',COLUMNS,[]);
  createTable_(book,'Roster',ROSTER_COLUMNS,[]);
- createTable_(book,'TeamNumbers',TEAM_COLUMNS,[]);
+ createTable_(book,'TeamNumbers',TEAM_LOGO_COLUMNS,[]);
  createTable_(book,'Fields',FIELD_COLUMNS,FIELDS.map(f=>FIELD_COLUMNS.map(k=>f[k])));
  createTable_(book,'Schools',['name'],SCHOOLS.map(x=>[x]));
  createTable_(book,'Settings',['key','value'],Object.entries(DEFAULT_SETTINGS));
@@ -161,7 +162,7 @@ function getSportsData(key){
  const roster=numberedRoster_(data.matches,roster_(book),teamNumbers);
  const competition=competition_(data.matches.filter(x=>canEdit||x.published),roster,canEdit);
  data.fields=data.fields.map(({_row,...f})=>f);
- return {...data,...competition,canEdit,formatVersion:5,...(canEdit?{teamNumbers:teamNumbers||{}}:{})};
+ return {...data,...competition,schoolLogos:schoolLogos_(book),canEdit,formatVersion:5,...(canEdit?{teamNumbers:teamNumbers||{}}:{})};
 }
 
 function saveSportsMatch(key,input){
@@ -206,6 +207,7 @@ function saveSportsMatch(key,input){
 const ROSTER_SLOTS=['A1','A2','A3','A4','B1','B2','B3','C1','C2','C3','1','2','3','4'];
 const ROSTER_COLUMNS=['event',...ROSTER_SLOTS,'tieOrder'];
 const TEAM_COLUMNS=['number','school'];
+const TEAM_LOGO_COLUMNS=[...TEAM_COLUMNS,'logoUrl'];
 const TEAM_NUMBERS=Array.from({length:10},(_,i)=>String(i+1));
 const SEMI_LABELS=['แชมป์สายตามประกบ¹','รองแชมป์สายผลงานดีที่สุด','แชมป์สายที่เหลือ 1','แชมป์สายที่เหลือ 2'];
 const eventKey_=m=>[m.sport,m.level,m.type].join(':');
@@ -289,6 +291,13 @@ function events_(matches){
 function slots_(event){
  const used=new Set(event.flatMap(m=>[slotOf_(m.home),slotOf_(m.away)]));
  return ROSTER_SLOTS.filter(slot=>used.has(slot));
+}
+
+function schoolLogos_(book){
+ const sheet=book.getSheetByName('TeamNumbers');
+ return Object.fromEntries((sheet?rows_(sheet,TEAM_LOGO_COLUMNS):[])
+   .map(row=>[String(row.school).trim(),String(row.logoUrl).trim()])
+   .filter(([name,url])=>name&&url.length<=1500&&/^https:\/\/[^\s@]+$/i.test(url)));
 }
 
 function teamNumbers_(book){
