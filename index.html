@@ -3,43 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#dff4ff">
-  <title>กีฬานักเรียน นากลาง 3 · ตารางและผลการแข่งขัน</title>
-  <link rel="stylesheet" href="viewer.css?v=20261117-reference">
-  <script type="module" src="viewer.js?v=20261117-reference"></script>
+  <meta name="theme-color" content="#0859c7">
+  <meta name="description" content="ดูโปรแกรมแข่งขัน ผลการแข่งขัน และทีมในสายของกีฬานักเรียน นากลาง 3">
+  <title>กีฬานักเรียน นากลาง 3 · โปรแกรมและผลการแข่งขัน</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="viewer.css?v=20261118-redesign">
+  <script type="module" src="viewer.js?v=20261118-redesign"></script>
 </head>
 <body>
+  <a class="skip" href="#content">ข้ามไปยังเนื้อหา</a>
   <header class="site-header">
     <div class="shell header-inner">
-      <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">🏆</span><span>สนามกลาง นากลาง 3<small>กีฬานักเรียน ปีการศึกษา 2569</small></span></a>
-      <nav class="main-nav" aria-label="เมนูผู้ชม">
-        <a href="#home" aria-current="page"><span aria-hidden="true">⌂</span> หน้าแรก</a>
-        <a href="#results"><span aria-hidden="true">🏆</span> ผลการแข่งขัน</a>
-        <a href="#standings"><span aria-hidden="true">▥</span> ตารางคะแนน</a>
-        <a href="#schedule"><span aria-hidden="true">▦</span> โปรแกรมแข่ง</a>
-        <a href="#venues"><span aria-hidden="true">🏫</span> โรงเรียนและสนาม</a>
+      <a class="brand" href="#home">
+        <span class="brand-mark" aria-hidden="true">🏆</span>
+        <span>กีฬานักเรียน นากลาง 3<small>ปีการศึกษา 2569</small></span>
+      </a>
+      <nav class="main-nav" aria-label="เมนูหลัก">
+        <a href="#home" aria-current="page">หน้าแรก</a>
+        <a href="#schedule">โปรแกรมแข่ง</a>
+        <a href="#results">ผลการแข่งขัน</a>
+        <a href="#standings">ตารางคะแนน</a>
+        <a href="#venues">โรงเรียนและสนาม</a>
       </nav>
-      <form id="team-search" role="search"><input type="search" name="query" aria-label="ค้นหาทีมหรือโรงเรียน" placeholder="ค้นหาทีม / โรงเรียน…" maxlength="100"><button type="submit" aria-label="ค้นหา">⌕</button></form>
-      <a class="admin-link" href="admin.html">สำหรับผู้จัด</a>
+      <form id="team-search" role="search">
+        <label class="sr-only" for="query">ค้นหาโรงเรียนหรือทีม</label>
+        <input id="query" type="search" name="query" placeholder="ค้นหาโรงเรียนหรือทีม" maxlength="100">
+        <button type="submit">ค้นหา</button>
+      </form>
     </div>
   </header>
-  <main>
+  <main id="content" tabindex="-1">
     <section class="hero" aria-labelledby="event-title">
-      <div class="shell hero-inner">
-        <div class="event">
-          <h1 id="event-title">รายงานผลการแข่งขันกีฬากลุ่ม<em>การแข่งขันกีฬานักเรียน นากลาง 3</em></h1>
-          <p>ศูนย์เครือข่ายคุณภาพการศึกษานากลาง 3</p>
-        </div>
+      <div class="hero-copy">
+        <h1 id="event-title">กีฬานักเรียน นากลาง 3</h1>
+        <p>ศูนย์เครือข่ายคุณภาพการศึกษานากลาง 3</p>
       </div>
     </section>
-    <div class="shell competition" id="competition">
+    <div class="shell competition">
       <div id="connection-error" class="load-error" hidden>
         <p id="error-message" role="alert"></p>
-        <button id="reload" class="control-button" type="button">ลองเชื่อมต่อใหม่</button>
+        <button id="reload" class="button" type="button">ลองเชื่อมต่อใหม่</button>
       </div>
-      <div id="content"><p class="empty">กำลังอ่านข้อมูลการแข่งขัน…</p></div>
+      <div id="competition-content"><p class="empty" role="status">กำลังอ่านข้อมูลการแข่งขัน…</p></div>
     </div>
   </main>
-  <footer><div class="shell footer"><span>🏆 กีฬานักเรียน นากลาง 3 · ปีการศึกษา 2569</span><p class="sync" id="sync" role="status">กำลังโหลดข้อมูล</p></div></footer>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <span class="footer-brand">🏆 กีฬานักเรียน นากลาง 3</span>
+      <p class="sync" id="sync" role="status">กำลังโหลดข้อมูล</p>
+      <a href="admin.html">สำหรับผู้จัด</a>
+    </div>
+  </footer>
 </body>
 </html>
