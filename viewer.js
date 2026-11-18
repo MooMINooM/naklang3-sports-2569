@@ -181,12 +181,12 @@ function groupCards(matches, sport, compact = false) {
     usesSets(sport) ? ['เซตได้', 'เซตเสีย'] : ['แต้มได้', 'แต้มเสีย'];
   const visible = compact ? [groups.find(group => group.rows.some(row => row.played)) || groups[0]] : groups;
   return '<div class="group-grid">' + visible.map(({match, rows}) => {
-    const played = rows.some(row => row.played);
-    const showSetPoints = !compact && usesSets(sport) && rows.some(row => row.setMatches);
+    const showTable = !compact || rows.some(row => row.played);
+    const showSetPoints = !compact && usesSets(sport);
     const title = LEVELS[match.level] + TYPES[match.type] + ' · ' +
       (match.group ? 'สาย ' + match.group : 'พบกันหมด');
     const label = compact ? SPORTS[sport] + ' · ' + title : title;
-    return '<section class="group-card ' + sport + '"><h3>' + esc(label) + '</h3>' + (played || (!compact && sport === 'football') ?
+    return '<section class="group-card ' + sport + '"><h3>' + esc(label) + '</h3>' + (showTable ?
       '<div class="table-scroll" tabindex="0" role="region" aria-label="เลื่อนดูตารางคะแนน"><table aria-label="' + esc(label) + '"><thead><tr><th scope="col">อันดับ</th>' +
       '<th scope="col">ทีม</th><th scope="col">แข่ง</th><th scope="col">ชนะ</th>' +
       (compact ? '' : '<th scope="col">เสมอ</th><th scope="col">แพ้</th>') +
