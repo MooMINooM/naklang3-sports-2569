@@ -2,7 +2,7 @@ import {readSports, saveMatch, saveDraw, saveTeamNumbers} from './sports-api.js?
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, blank,
-} from './sports-data.js?v=20261117-bracket';
+} from './sports-data.js?v=20261118-volleyball';
 
 const byId = id => document.getElementById(id);
 const login = byId('login-form');

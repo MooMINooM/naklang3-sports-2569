@@ -10,11 +10,8 @@ const FIELDS=[
  ['P1','เปตองชาย','petanque','upper,middle','boys'],['P2','เปตองหญิง 1','petanque','upper,middle','girls'],['P3','เปตองหญิง 2','petanque','upper,middle','girls'],
 ].map(([id,name,sport,levels,type=''])=>({id,name,sport,levels,type}));
 const SCHOOLS=['บ้านท่าอุทัย','บ้านหนองด้วง','ซำขอนแก่น','บ้านโนนสวรรค์','บ้านโนนไหม','บ้านโนนสวาท','บ้านหนองกรุงศรี','บ้านภูพระโนนผักหวาน','บ้านโนนม่วง','บ้านโนนเมือง'];
-const DURATION={football:{kg:25,lower:35,upper:41,middle:45},volleyball:90,takraw:30,petanque:90};
-function duration(match, settings){
- const {sport,level,stage}=match;
- const groupMinutes=Number(settings.volleyballUpperGroupMinutes);
- if(sport==='volleyball'&&level==='upper'&&stage==='group'&&Number.isInteger(groupMinutes)&&groupMinutes>0)return groupMinutes;
+const DURATION={football:{kg:25,lower:35,upper:41,middle:45},volleyball:60,takraw:30,petanque:90};
+function duration({sport,level}){
  return typeof DURATION[sport]==='number'?DURATION[sport]:DURATION[sport]?.[level];
 }
 const minutes=s=>Number(s.split(':')[0])*60+Number(s.split(':')[1]);
@@ -48,7 +45,7 @@ function check(m,all,fields,settings){
 }
 const COLUMNS=['id','day','start','sport','level','type','field','home','away','stage','group','homeScore','awayScore','published','tieWinner'];
 const FIELD_COLUMNS=['id','name','sport','levels','type'];
-const DEFAULT_SETTINGS={minDay1:'10:15',minOther:'08:00',end:'17:30',convertDay:'',convertTime:'',endDay4:'',volleyballUpperGroupMinutes:''};
+const DEFAULT_SETTINGS={minDay1:'10:15',minOther:'08:00',end:'17:30',convertDay:'',convertTime:'',endDay4:''};
 
 function doGet(e){
  const bridgeId=e && e.parameter && e.parameter.bridge;

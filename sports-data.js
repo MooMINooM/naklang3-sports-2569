@@ -4,15 +4,12 @@ export const TYPES = {boys: 'ชาย', girls: 'หญิง'};
 export const STAGES = {group: 'รอบแบ่งกลุ่ม', league: 'พบกันหมด', semi: 'รอบรองชนะเลิศ', third: 'ชิงอันดับ 3', final: 'ชิงชนะเลิศ'};
 export const DAYS = {1: 'วันที่ 1', 2: 'วันที่ 2', 3: 'วันที่ 3', 4: 'วันที่ 4'};
 
-const durations = {football: {kg: 25, lower: 35, upper: 41, middle: 45}, volleyball: 90, takraw: 30, petanque: 90};
+const durations = {football: {kg: 25, lower: 35, upper: 41, middle: 45}, volleyball: 60, takraw: 30, petanque: 90};
 const entities = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'};
 
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => entities[char]);
 export const hasScore = match => match.homeScore !== '' && match.awayScore !== '';
-export function duration({sport, level, stage}, settings) {
-  const groupMinutes = Number(settings.volleyballUpperGroupMinutes);
-  if (sport === 'volleyball' && level === 'upper' && stage === 'group' &&
-      Number.isInteger(groupMinutes) && groupMinutes > 0) return groupMinutes;
+export function duration({sport, level}) {
   return sport === 'football' ? durations.football[level] : durations[sport];
 }
 export const minutes = time => {

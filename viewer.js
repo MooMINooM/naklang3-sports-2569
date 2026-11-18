@@ -2,14 +2,14 @@ import {readSports} from './sports-api.js';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, standings,
-} from './sports-data.js?v=20261117-bracket';
+} from './sports-data.js?v=20261118-volleyball';
 
 const content = document.getElementById('competition-content');
 const search = document.getElementById('team-search');
 const status = document.getElementById('sync');
 const error = document.getElementById('connection-error');
 const sports = Object.keys(SPORTS);
-const routes = ['home', 'schedule', 'results', 'standings', 'venues'];
+const routes = ['home', 'schedule', 'results', 'standings', 'schools', 'venues'];
 const sportTabs = {schedule: 'โปรแกรมแข่ง', results: 'ผลการแข่งขัน', teams: 'ทีมและสาย'};
 const icons = {football: '⚽', volleyball: '🏐', takraw: '', petanque: ''};
 let data;
@@ -17,27 +17,33 @@ let pending = false;
 
 function readRoute() {
   const [path, query] = location.hash.slice(1).split('?');
-  const [page, sport, tab] = path.split('/');
+  const [page, sport, subsection, division, divisionTab] = path.split('/');
   const params = new URLSearchParams(query);
+  const dedicated = page === 'sport' && Object.hasOwn(LEVELS, subsection) && Object.hasOwn(TYPES, division);
+  const tab = dedicated ? divisionTab : subsection;
   return {
     page: page === 'sport' && sports.includes(sport) ? 'sport' : routes.includes(page) ? page : 'home',
     sport: sports.includes(sport) ? sport : sports.includes(params.get('sport')) ? params.get('sport') : '',
     tab: Object.hasOwn(sportTabs, tab) ? tab : 'schedule',
     day: params.get('day') === '0' && (page === 'schedule' || page === 'sport') ? '0' :
       Object.hasOwn(DAYS, params.get('day')) ? params.get('day') : '1',
-    level: Object.hasOwn(LEVELS, params.get('level')) ? params.get('level') : '',
-    type: Object.hasOwn(TYPES, params.get('type')) ? params.get('type') : '',
+    dedicated,
+    level: dedicated ? subsection : Object.hasOwn(LEVELS, params.get('level')) ? params.get('level') : '',
+    type: dedicated ? division : Object.hasOwn(TYPES, params.get('type')) ? params.get('type') : '',
     query: (params.get('q') || '').slice(0, 100).trim(),
+    school: (params.get('school') || '').slice(0, 100).trim(),
   };
 }
 
 function link(page, state = {}) {
-  const path = page === 'sport' ? 'sport/' + state.sport + '/' + (state.tab || 'schedule') : page;
+  const division = page === 'sport' && state.dedicated ? state.level + '/' + state.type + '/' : '';
+  const path = page === 'sport' ? 'sport/' + state.sport + '/' + division + (state.tab || 'schedule') : page;
   const params = new URLSearchParams();
   if (state.day && state.day !== '1') params.set('day', state.day);
   if (state.sport && page !== 'sport' && page !== 'home') params.set('sport', state.sport);
-  for (const key of ['level', 'type']) if (state[key]) params.set(key, state[key]);
+  for (const key of ['level', 'type']) if (!division && state[key]) params.set(key, state[key]);
   if (state.query) params.set('q', state.query);
+  if (page === 'schools' && state.school) params.set('school', state.school);
   return '#' + path + (params.size ? '?' + params : '');
 }
 
@@ -66,6 +72,7 @@ function select(id, label, values, value, placeholder) {
 }
 
 function filters(route, {days = false, sport = false} = {}) {
+  if (route.dedicated) return days ? '<div class="filters">' + dayNav(route, Boolean(route.query)) + '</div>' : '';
   return '<div class="filters">' + (days ? dayNav(route, Boolean(route.query)) : '') +
     '<div class="selects">' + (sport ? select('sport', 'กีฬา', SPORTS, route.sport, 'ทุกกีฬา') : '') +
     select('level', 'รุ่น', LEVELS, route.level, 'ทุกรุ่น') +
@@ -90,6 +97,10 @@ function seasonLabel(match) {
     (match.group ? 'สาย ' + match.group : STAGES[match.stage]);
 }
 
+function signed(value) {
+  return value > 0 ? '+' + value : value < 0 ? '−' + Math.abs(value) : '0';
+}
+
 function matchup(match, scored) {
   const scores = scored ? '<span class="score" role="img" aria-label="คะแนน ' + esc(match.homeScore) + ' ต่อ ' +
     esc(match.awayScore) + '">' + esc(match.homeScore) + '<span aria-hidden="true">–</span>' + esc(match.awayScore) + '</span>' :
@@ -101,12 +112,15 @@ function matchup(match, scored) {
 
 function fixture(match, compact = false) {
   const scored = hasScore(match);
-  const end = clock(minutes(match.start) + duration(match, data.settings));
+  const end = clock(minutes(match.start) + duration(match));
   const time = esc(match.start) + '–' + esc(end) + ' น.';
   const when = scored ? esc(DAYS[match.day]) + ' · ' + time : time;
   const venue = esc(fieldName(data.fields, match.field));
   const outcome = match.winnerSide ? 'ชนะ ' + esc(match[match.winnerSide]) : 'เสมอ';
-  const state = scored ? '<span class="match-state played">' + outcome + '</span>' :
+  const difference = Number(match.homeScore) - Number(match.awayScore);
+  const state = scored ? '<span class="match-state played">' + outcome +
+    '</span><span class="score-difference" aria-label="ผลต่างแต้มทีมแรก ' + signed(difference) +
+    ' ทีมที่สอง ' + signed(-difference) + '">ผลต่าง ' + signed(difference) + ' / ' + signed(-difference) + '</span>' :
     match.ready === false ? '<span class="match-state">รอผลจับสลากหรือรอบก่อนหน้า</span>' : '';
   if (compact && !scored) {
     return '<article class="fixture preview-match ' + match.sport + '"><div class="preview-when">' +
@@ -154,11 +168,12 @@ function groupCards(matches, sport, compact = false) {
       '<div class="table-scroll"><table aria-label="' + esc(label) + '"><thead><tr><th scope="col">อันดับ</th>' +
       '<th scope="col">ทีม</th><th scope="col">แข่ง</th><th scope="col">ชนะ</th>' +
       (compact ? '' : '<th scope="col">เสมอ</th><th scope="col">แพ้</th>') +
-      '<th scope="col">คะแนน</th></tr></thead><tbody>' +
+      '<th scope="col">แต้มได้</th><th scope="col">แต้มเสีย</th><th scope="col">ผลต่าง</th><th scope="col">คะแนน</th></tr></thead><tbody>' +
       rows.map(row => '<tr><td>' + (row.played ? row.rank : '–') + '</td><th scope="row">' + esc(row.name) +
         '</th><td>' + row.played + '</td><td>' + row.wins + '</td>' +
         (compact ? '' : '<td>' + row.ties + '</td><td>' + row.losses + '</td>') +
-        '<td><strong>' + row.points + '</strong></td></tr>').join('') + '</tbody></table></div>' :
+        '<td>' + row.goals + '</td><td>' + (row.goals - row.difference) + '</td><td>' +
+        signed(row.difference) + '</td><td><strong>' + row.points + '</strong></td></tr>').join('') + '</tbody></table></div>' :
       '<ul class="team-list">' + rows.map(row => '<li>' + esc(row.name) + '</li>').join('') + '</ul>') + '</section>';
   }).join('') + '</div>';
 }
@@ -210,9 +225,10 @@ function homepage(route) {
         empty('ยังไม่มีโปรแกรมในวันนี้')), 'schedule-panel') +
     panel(scores.length ? 'ตารางคะแนน' : 'ทีมและสาย', '📊', link('standings', {sport: selectedSport}), 'ดูทุกสาย',
       miniTeams, 'teams-panel') +
-    panel('ผลการแข่งขัน', '🏆', '#results', 'ดูผลทั้งหมด', scores.length ?
+    panel('ผลการแข่งขัน', '🏆', '#results', 'ดูผลทั้งหมด', (scores.length ?
       '<div class="preview-fixtures">' + scores.slice(-3).reverse().map(match => fixture(match, true)).join('') + '</div>' :
-      empty('ยังไม่มีผลการแข่งขันที่เผยแพร่'), 'results-panel') + '</div>';
+      empty('ยังไม่มีผลการแข่งขันที่เผยแพร่')) +
+      '<a class="related-link" href="#schools">ดูผลรายโรงเรียน ›</a>', 'results-panel') + '</div>';
 }
 
 function filtered(route) {
@@ -236,7 +252,8 @@ function schedule(route) {
 function results(route) {
   const scores = ordered(filtered(route).filter(hasScore)).reverse();
   return (route.page === 'sport' ? '<h2 class="list-heading">ผลการแข่งขัน</h2>' :
-    heading('ผลการแข่งขัน', scores.length + ' คู่ที่ประกาศผลแล้ว')) +
+    heading('ผลการแข่งขัน', scores.length + ' คู่ที่ประกาศผลแล้ว') +
+    '<a class="related-link" href="#schools">ดูผลรายโรงเรียน ›</a>') +
     filters(route, {sport: route.page !== 'sport'}) +
     (scores.length ? '<div class="fixtures result-list">' + scores.map(match => fixture(match)).join('') + '</div>' :
       empty('ยังไม่มีผลการแข่งขันที่เผยแพร่ตามตัวกรองนี้'));
@@ -250,19 +267,105 @@ function teamPage(route) {
 }
 
 function sportPage(route) {
-  const active = sportTabs[route.tab];
+  const divisionTitle = route.dedicated ? LEVELS[route.level] + TYPES[route.type] : '';
   return '<div class="sport-heading ' + route.sport + '">' + sportIcon(route.sport) +
-    '<div><h1>' + SPORTS[route.sport] + '</h1></div></div>' + sportNav(route.sport, route.tab) +
+    '<div><h1>' + SPORTS[route.sport] + (divisionTitle ? ' · ' + divisionTitle : '') + '</h1></div></div>' +
+    sportNav(route.sport, route.tab) + divisions(route) +
     '<nav class="sport-tabs" aria-label="ข้อมูลการแข่งขัน' + SPORTS[route.sport] + '">' +
     Object.entries(sportTabs).map(([tab, label]) => '<a href="' +
-      esc(link('sport', {...route, tab, query: '', day: '1'})) + '"' + (active === label ? ' aria-current="page"' : '') +
+      esc(link('sport', {...route, tab, query: '', day: '1'})) + '"' + (route.tab === tab ? ' aria-current="page"' : '') +
       '>' + label + '</a>').join('') + '</nav>' +
     {schedule, results, teams: teamPage}[route.tab](route);
 }
 
+function divisions(route) {
+  const events = new Set(data.matches.filter(match => match.sport === route.sport)
+    .map(match => match.level + '/' + match.type));
+  const links = Object.keys(LEVELS).flatMap(level => Object.keys(TYPES)
+    .filter(type => events.has(level + '/' + type))
+    .map(type => {
+      const active = route.dedicated && route.level === level && route.type === type;
+      return '<a class="division-link" href="' +
+        esc(link('sport', {sport: route.sport, tab: route.tab, level, type, dedicated: true})) + '"' +
+        (active ? ' aria-current="page"' : '') + '>' + LEVELS[level] + TYPES[type] + '</a>';
+    })).join('');
+  if (!links) return '';
+  return '<nav class="division-nav" aria-label="รุ่นการแข่งขัน"><strong>รุ่นและประเภท</strong><div>' +
+    '<a class="division-link" href="' + esc(link('sport', {sport: route.sport, tab: route.tab})) + '"' +
+    (!route.dedicated && !route.level && !route.type ? ' aria-current="page"' : '') + '>ทุกรุ่น</a>' + links +
+    '</div></nav>';
+}
+
+function schoolMatch(match, school) {
+  const home = match.home === school;
+  const side = home ? 'home' : 'away';
+  const own = Number(home ? match.homeScore : match.awayScore);
+  const against = Number(home ? match.awayScore : match.homeScore);
+  const outcome = match.winnerSide ? (match.winnerSide === side ? 'win' : 'loss') :
+    own > against ? 'win' : own < against ? 'loss' : 'draw';
+  return {match, own, against, outcome, opponent: home ? match.away : match.home};
+}
+
+function schoolStats(games) {
+  const counts = {win: 0, draw: 0, loss: 0, own: 0, against: 0};
+  for (const game of games) {
+    counts[game.outcome]++;
+    counts.own += game.own;
+    counts.against += game.against;
+  }
+  return counts;
+}
+
+function schoolResultGroup(sport, games) {
+  const stats = schoolStats(games);
+  const labels = {win: 'ชนะ', draw: 'เสมอ', loss: 'แพ้'};
+  return '<section class="group-card school-sport ' + sport + '"><h2>' + badge(sport) + '</h2>' +
+    '<p class="school-totals">ชนะ ' + stats.win + ' · เสมอ ' + stats.draw + ' · แพ้ ' + stats.loss +
+    ' <span>แต้มได้ ' + stats.own + ' · แต้มเสีย ' + stats.against + ' · ผลต่าง ' +
+    signed(stats.own - stats.against) + '</span></p><div class="school-games">' +
+    games.map(({match, own, against, outcome, opponent}) =>
+      '<article class="school-game"><div><small>' + esc(seasonLabel(match)) + ' · ' + DAYS[match.day] +
+      '</small><strong>พบ ' + esc(opponent) + '</strong></div><div><span class="score" aria-label="แต้มได้ ' +
+      own + ' แต้มเสีย ' + against + '">' + own + ' – ' + against + '</span><small class="outcome ' + outcome +
+      '">' + labels[outcome] + ' · ' + signed(own - against) + '</small></div></article>').join('') + '</div></section>';
+}
+
+function schoolsPage(route) {
+  const names = new Set(data.schools);
+  for (const match of data.matches) {
+    if (!match.ready) continue;
+    names.add(match.home);
+    names.add(match.away);
+  }
+  const schools = [...names].filter(Boolean).sort((a, b) => a.localeCompare(b, 'th'));
+  const active = schools.includes(route.school) ? route.school : '';
+  const filter = '<div class="filters school-filter"><div class="selects">' +
+    select('school', 'โรงเรียน', Object.fromEntries(schools.map(name => [name, name])), active, 'เลือกโรงเรียน') +
+    '</div></div>';
+  if (!active) {
+    return heading('ผลการแข่งขันรายโรงเรียน') + filter +
+      '<div class="school-directory">' + schools.map(name => '<a href="' + esc(link('schools', {school: name})) +
+      '">' + esc(name) + ' <span aria-hidden="true">›</span></a>').join('') + '</div>';
+  }
+  const all = ordered(data.matches.filter(match => match.home === active || match.away === active));
+  const games = all.filter(hasScore).reverse().map(match => schoolMatch(match, active));
+  const stats = schoolStats(games);
+  const program = all.length ? '<a class="related-link" href="' +
+    esc(link('schedule', {query: active, day: '0'})) + '">ดูโปรแกรมของโรงเรียน ›</a>' : '';
+  return heading('ผลการแข่งขันรายโรงเรียน', active) + filter + program +
+    (games.length ? '<div class="school-summary" aria-label="สรุปผลการแข่งขัน"><span>แข่ง <b>' + games.length +
+      '</b></span><span>ชนะ <b>' + stats.win + '</b></span><span>เสมอ <b>' + stats.draw +
+      '</b></span><span>แพ้ <b>' + stats.loss + '</b></span></div><div class="group-grid">' +
+      sports.map(sport => {
+        const items = games.filter(game => game.match.sport === sport);
+        return items.length ? schoolResultGroup(sport, items) : '';
+      }).join('') + '</div>' : empty('โรงเรียนนี้ยังไม่มีผลการแข่งขันที่เผยแพร่'));
+}
+
 function venues() {
   return heading('โรงเรียนและสนาม') + '<div class="directory"><section class="group-card"><h2>โรงเรียนในเครือข่าย</h2>' +
-    '<ul class="team-list">' + data.schools.map(name => '<li>' + esc(name) + '</li>').join('') +
+    '<ul class="team-list">' + data.schools.map(name => '<li><a href="' + esc(link('schools', {school: name})) +
+      '">' + esc(name) + '</a></li>').join('') +
     '</ul></section><section class="group-card"><h2>สนามแข่งขัน</h2><ul class="venue-list">' +
     data.fields.map(field => '<li>' + badge(field.sport) + '<div><strong>' + esc(field.name) + '</strong><small>' +
       esc(field.levels.split(',').map(level => LEVELS[level]).filter(Boolean).join(' · ')) + '</small></div></li>').join('') +
@@ -277,7 +380,7 @@ function render(syncSearch = true) {
     if (item.hash === '#' + route.page) item.setAttribute('aria-current', 'page');
     else item.removeAttribute('aria-current');
   });
-  if (data) content.innerHTML = {home: homepage, schedule, results, standings: teamPage, venues, sport: sportPage}[route.page](route);
+  if (data) content.innerHTML = {home: homepage, schedule, results, standings: teamPage, schools: schoolsPage, venues, sport: sportPage}[route.page](route);
 }
 
 async function refresh() {
@@ -312,7 +415,7 @@ function updateFilters(next, focusSelector) {
 
 content.addEventListener('change', event => {
   const {name, value} = event.target;
-  if (!['sport', 'level', 'type'].includes(name)) return;
+  if (!['sport', 'level', 'type', 'school'].includes(name)) return;
   updateFilters({...readRoute(), [name]: value}, '#' + name);
 });
 content.addEventListener('click', event => {
