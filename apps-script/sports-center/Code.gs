@@ -43,7 +43,47 @@ function check(m,all,fields,settings){
  }
  return '';
 }
-const COLUMNS=['id','day','start','sport','level','type','field','home','away','stage','group','homeScore','awayScore','published','tieWinner'];
+const COLUMNS=['id','day','start','sport','level','type','field','home','away','stage','group','homeScore','awayScore','published','tieWinner','scoreSets'];
+function setResult_(sets) {
+  if (!Array.isArray(sets) || sets.length > 3) throw new Error('กรอกผลได้สูงสุด 3 เซต');
+  const wins = [0, 0];
+  const points = [0, 0];
+  for (const pair of sets) {
+    if (!Array.isArray(pair) || pair.length !== 2 ||
+        !pair.every(score => Number.isInteger(score) && score >= 0 && score <= 999)) {
+      throw new Error('กรอกแต้มทั้งสองทีมในแต่ละเซตเป็นจำนวนเต็ม 0–999');
+    }
+    if (wins.includes(2)) throw new Error('จบการแข่งขันเมื่อทีมใดทีมหนึ่งชนะ 2 เซต');
+    if (pair[0] === pair[1]) throw new Error('แต้มในเซตเดียวกันต้องมีผู้ชนะ');
+    wins[pair[0] > pair[1] ? 0 : 1]++;
+    points[0] += pair[0];
+    points[1] += pair[1];
+  }
+  return {wins, points, finished: wins.includes(2)};
+}
+function usesSets_(sport){return sport==='volleyball'||sport==='takraw';}
+function readSets_(value){
+ if(!value)return [];
+ try{
+   const sets=JSON.parse(value);
+   return setResult_(sets).finished?sets:[];
+ }catch(error){return [];}
+}
+function scoreMatch_(m,input,prior){
+ if(!usesSets_(m.sport)){m.scoreSets=[];return;}
+ if(!Object.prototype.hasOwnProperty.call(input,'scoreSets')){
+   if((prior ? (m.homeScore!==prior.homeScore||m.awayScore!==prior.awayScore) :
+     (m.homeScore!==''||m.awayScore!=='')))throw new Error('กรุณาใช้หน้าแอดมินล่าสุดเพื่อกรอกแต้มรายเซต');
+   m.scoreSets=prior?.scoreSets||[];
+   return;
+ }
+ const sets=input.scoreSets;
+ const result=setResult_(sets);
+ if(sets.length&&!result.finished)throw new Error('บันทึกผลเมื่อทีมใดทีมหนึ่งชนะครบ 2 เซต');
+ m.scoreSets=sets;
+ m.homeScore=sets.length?result.wins[0]:'';
+ m.awayScore=sets.length?result.wins[1]:'';
+}
 const FIELD_COLUMNS=['id','name','sport','levels','type'];
 const DEFAULT_SETTINGS={minDay1:'10:15',minOther:'08:00',end:'17:30',convertDay:'',convertTime:'',endDay4:''};
 
@@ -106,7 +146,7 @@ function authorized_(key){
 }
 
 function readSports_(book){
- const matches=rows_(book.getSheetByName('Matches'),COLUMNS).map(m=>({...m,day:Number(m.day),published:m.published===true||String(m.published).toUpperCase()==='TRUE',homeScore:m.homeScore===''?'':Number(m.homeScore),awayScore:m.awayScore===''?'':Number(m.awayScore)}));
+ const matches=rows_(book.getSheetByName('Matches'),COLUMNS).map(m=>({...m,day:Number(m.day),published:m.published===true||String(m.published).toUpperCase()==='TRUE',homeScore:m.homeScore===''?'':Number(m.homeScore),awayScore:m.awayScore===''?'':Number(m.awayScore),scoreSets:readSets_(m.scoreSets)}));
  const fields=rows_(book.getSheetByName('Fields'),FIELD_COLUMNS);
  const schools=rows_(book.getSheetByName('Schools'),['name']).map(r=>String(r.name));
  const settings={...DEFAULT_SETTINGS,...Object.fromEntries(rows_(book.getSheetByName('Settings'),['key','value']).map(r=>[r.key,String(r.value)]))};
@@ -121,7 +161,7 @@ function getSportsData(key){
  const roster=numberedRoster_(data.matches,roster_(book),teamNumbers);
  const competition=competition_(data.matches.filter(x=>canEdit||x.published),roster,canEdit);
  data.fields=data.fields.map(({_row,...f})=>f);
- return {...data,...competition,canEdit,formatVersion:4,...(canEdit?{teamNumbers:teamNumbers||{}}:{})};
+ return {...data,...competition,canEdit,formatVersion:5,...(canEdit?{teamNumbers:teamNumbers||{}}:{})};
 }
 
 function saveSportsMatch(key,input){
@@ -137,6 +177,7 @@ function saveSportsMatch(key,input){
    const prior=matches.find(x=>x.id===m.id);
    if(m.id&&!prior)throw new Error('ไม่พบคู่ที่ต้องการแก้ไข');
    if(prior&&managed_(prior)&&['sport','level','type','stage','group','home','away'].some(k=>m[k]!==prior[k]))throw new Error('แก้ชื่อทีมจากหน้ากำหนดเลขทีมโรงเรียน');
+   scoreMatch_(m,input,prior);
    const tiedKnockout=scored_(m)&&m.homeScore===m.awayScore&&['semi','third','final'].includes(m.stage);
    if(tiedKnockout&&!['home','away'].includes(m.tieWinner))throw new Error('เลือกผู้ชนะจากการตัดสินกรณีคะแนนเท่ากัน');
    if(!tiedKnockout)m.tieWinner='';
@@ -152,8 +193,10 @@ function saveSportsMatch(key,input){
    const derived=competition_(updated,nextRoster,true).matches.find(row=>row.id===m.id);
    if(scored_(m)&&!derived.ready)throw new Error('ต้องทราบทีมแข่งขันทั้งสองฝั่งก่อนบันทึกผล');
    checkDependencies_(event,updated,priorRoster,nextRoster);
-   const row=COLUMNS.map(k=>m[k]);
+   const row=COLUMNS.map(k=>k==='scoreSets'?(m.scoreSets.length?JSON.stringify(m.scoreSets):''):m[k]);
    const sheet=book.getSheetByName('Matches');
+   const header=sheet.getRange(1,COLUMNS.length);
+   if(header.getValue()==='')header.setValue('scoreSets');
    sheet.getRange(prior?prior._row:sheet.getLastRow()+1,1,1,row.length).setValues([row]);
    SpreadsheetApp.flush();
    return m.id;

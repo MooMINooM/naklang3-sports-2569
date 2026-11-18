@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
-  <link rel="stylesheet" href="admin.css?v=20261117-bracket">
-  <script type="module" src="admin.js?v=20261118-volleyball"></script>
+  <link rel="stylesheet" href="admin.css?v=20261118-set-scoring">
+  <script type="module" src="admin.js?v=20261118-set-scoring"></script>
 </head>
 <body>
   <header class="top">
@@ -63,9 +63,14 @@
         <label>ทีมที่ 2 <input name="away" list="schools" maxlength="100" required></label>
         <label>รอบแข่งขัน <select name="stage" required></select></label>
         <label id="group-field">สาย <select name="group"><option value="A">กลุ่ม A</option><option value="B">กลุ่ม B</option><option value="C">กลุ่ม C</option></select></label>
-        <label>คะแนนทีมที่ 1 <input name="homeScore" type="number" min="0" max="999"></label>
-        <label>คะแนนทีมที่ 2 <input name="awayScore" type="number" min="0" max="999"></label>
+        <label id="single-home">คะแนนทีมที่ 1 <input name="homeScore" type="number" min="0" max="999"></label>
+        <label id="single-away">คะแนนทีมที่ 2 <input name="awayScore" type="number" min="0" max="999"></label>
       </div>
+      <fieldset id="set-scores" hidden>
+        <legend>แต้มรายเซต · ชนะ 2 ใน 3 เซต</legend>
+        <div class="set-grid" id="set-grid"></div>
+        <button id="clear-sets" type="button">ล้างผลรายเซต</button>
+      </fieldset>
       <div id="tie-field" hidden><label>ผู้ชนะกรณีตัดสินเมื่อคะแนนเท่ากัน <select name="tieWinner"></select></label></div>
       <p id="score-hint" class="status" role="status"></p>
       <datalist id="schools"></datalist>

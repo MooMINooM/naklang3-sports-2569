@@ -1,8 +1,8 @@
 import {readSports, saveMatch, saveDraw, saveTeamNumbers} from './sports-api.js?v=20261117-team-numbers';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
-  minutes, clock, ordered, fieldName, options, blank,
-} from './sports-data.js?v=20261118-volleyball';
+  minutes, clock, ordered, fieldName, options, blank, usesSets, setResult,
+} from './sports-data.js?v=20261118-set-scoring';
 
 const byId = id => document.getElementById(id);
 const login = byId('login-form');
@@ -26,6 +26,12 @@ let data = blank;
 let key = '';
 let editing = null;
 let busy = false;
+let clearSets = false;
+const setGrid = byId('set-grid');
+setGrid.innerHTML = '<div></div><strong id="set-team-home">ทีมที่ 1</strong><strong id="set-team-away">ทีมที่ 2</strong>' + [1, 2, 3].map(set => '<div class="set-label">เซต ' + set + '</div>' +
+  ['home', 'away'].map((side, i) => '<input data-set type="number" min="0" max="999" name="' + side + 'Set' + set +
+    '" aria-label="แต้มเซต ' + set + ' ทีมที่ ' + (i + 1) + '">').join('')).join('');
+const setFields = [...setGrid.querySelectorAll('input')];
 
 dayFilter.innerHTML = options(DAYS, '', 'ทุกวัน');
 sportFilter.innerHTML = options(SPORTS, '', 'ทุกกีฬา');
@@ -57,7 +63,8 @@ function render() {
 
   const rows = matches.map(match => {
     const end = clock(minutes(match.start) + duration(match, data.settings));
-    const score = hasScore(match) ? esc(match.homeScore) + ' – ' + esc(match.awayScore) +
+    const score = hasScore(match) ? esc(match.homeScore) + ' – ' + esc(match.awayScore) + (usesSets(match.sport) ? ' เซต' : '') +
+      (match.scoreSets?.length ? '<small>' + match.scoreSets.map(pair => pair.join('–')).join(' / ') + '</small>' : '') +
       '<small>' + (match.winnerSide ? 'ชนะ: ' + esc(match[match.winnerSide]) : 'เสมอ') + '</small>' :
       match.ready === false ? 'รอยืนยันทีม' : 'รอผล';
     return '<tr><td><strong>' + DAYS[match.day] + '</strong><small>' + esc(match.start) + '–' + end +
@@ -104,6 +111,8 @@ function edit(match) {
   editing = match || null;
   const day = match?.day || Number(dayFilter.value) || 1;
   form.reset();
+  clearSets = false;
+  setFields.forEach((field, i) => { field.value = match?.scoreSets?.[Math.floor(i / 2)]?.[i % 2] ?? ''; });
   byId('form-title').textContent = match ? 'แก้ไขคู่และบันทึกผล' : 'เพิ่มคู่แข่งขัน';
   fields.day.innerHTML = options(DAYS, day);
   fields.sport.innerHTML = options(SPORTS, match?.sport || sportFilter.value || 'football');
@@ -164,6 +173,12 @@ login.addEventListener('submit', async event => {
   }
 });
 
+byId('clear-sets').addEventListener('click', () => {
+  for (const field of setFields) field.value = '';
+  clearSets = true;
+  updateScoreHint();
+});
+setGrid.addEventListener('input', () => updateScoreHint());
 form.addEventListener('change', event => {
   if (['sport', 'level', 'type', 'stage', 'day', 'start'].includes(event.target.name)) syncMatchChoices();
   updateScoreHint();
@@ -185,6 +200,25 @@ form.addEventListener('submit', async event => {
   match.group = match.stage === 'group' ? match.group : '';
   match.published = values.has('published');
   for (const field of ['homeScore', 'awayScore']) match[field] = match[field] ? Number(match[field]) : '';
+
+  if (usesSets(match.sport)) {
+    if (data.formatVersion < 5) {
+      status('form-status', 'กรุณาโหลดหน้าใหม่หลังระบบเปิดบันทึกแต้มรายเซต', true);
+      return;
+    }
+    try {
+      const sets = enteredSets();
+      if (sets.length && !setResult(sets).finished) throw new Error('กรอกผลจนทีมหนึ่งชนะครบ 2 เซต');
+      if (sets.length || clearSets || editing?.scoreSets?.length) match.scoreSets = sets;
+      else if (editing && editing.sport === match.sport) {
+        match.homeScore = editing.homeScore;
+        match.awayScore = editing.awayScore;
+      }
+    } catch (error) {
+      status('form-status', error.message, true);
+      return;
+    }
+  }
 
   const save = byId('save-match');
   const cancel = byId('cancel-match');
@@ -214,7 +248,47 @@ list.addEventListener('click', event => {
   if (match) edit(match);
 });
 
+function enteredSets() {
+  const sets = [];
+  for (let i = 0; i < setFields.length; i += 2) {
+    const pair = setFields.slice(i, i + 2).map(field => field.value);
+    if (pair.every(score => score === '')) continue;
+    if (sets.length !== i / 2 || pair.some(score => score === '')) throw new Error('กรอกแต้มทั้งสองทีมตามลำดับเซต');
+    sets.push(pair.map(Number));
+  }
+  return sets;
+}
+
 function updateScoreHint(tieWinner = fields.tieWinner.value) {
+  const setSport = usesSets(fields.sport.value);
+  const unresolved = editing?.ready === false;
+  byId('single-home').hidden = byId('single-away').hidden = setSport;
+  fields.homeScore.disabled = fields.awayScore.disabled = setSport || unresolved;
+  byId('set-scores').hidden = !setSport;
+  byId('set-scores').disabled = unresolved;
+  if (setSport) {
+    byId('tie-field').hidden = fields.tieWinner.disabled = true;
+    fields.tieWinner.required = false;
+    const names = [fields.home.value || 'ทีมที่ 1', fields.away.value || 'ทีมที่ 2'];
+    byId('set-team-home').textContent = names[0];
+    byId('set-team-away').textContent = names[1];
+    setFields.forEach((field, i) => field.setAttribute('aria-label',
+      'แต้มเซต ' + (Math.floor(i / 2) + 1) + ' ' + names[i % 2]));
+    try {
+      const sets = enteredSets();
+      const result = setResult(sets);
+      const legacy = editing && hasScore(editing) && !editing.scoreSets?.length && !clearSets;
+      const message = unresolved ? 'รอผลจับสลากหรือผลรอบก่อนหน้า' : sets.length ?
+        'เซต ' + result.wins.join('–') + ' · แต้มรวม ' + result.points.join('–') + (result.finished ?
+          ' · ผู้ชนะ ' + names[result.wins[0] === 2 ? 0 : 1] : ' · ยังไม่จบการแข่งขัน') :
+        legacy ? 'ผลเดิม ' + editing.homeScore + '–' + editing.awayScore + ' เซต ยังไม่มีแต้มรายเซต' :
+        names.join(' พบ ');
+      status('score-hint', message);
+    } catch (error) {
+      status('score-hint', error.message, true);
+    }
+    return;
+  }
   const home = fields.homeScore.value;
   const away = fields.awayScore.value;
   const complete = home !== '' && away !== '';

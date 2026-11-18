@@ -52,3 +52,8 @@ input,select{width:100%;min-width:0}
 .publish input{width:auto;min-height:auto}
 .form-actions{justify-content:flex-end;margin-top:14px}
 @media(max-width:580px){main{padding:22px 14px}.top{padding:13px 14px}.login{margin:4vh auto 0;padding:21px}.filters{padding:13px}.filters label{min-width:110px}dialog{padding:15px}.form-grid{gap:9px}}
+
+#set-scores { margin: 13px 0 6px; padding: 10px; border: 1px solid #c8dbeb; border-radius: 9px; }
+#set-scores legend, .set-label { font-weight: 700; }
+.set-grid { display: grid; grid-template-columns: auto repeat(2,minmax(0,1fr)); gap: 6px; align-items: center; margin-bottom: 8px; }
+.set-grid input { min-width: 0; width: 100%; }

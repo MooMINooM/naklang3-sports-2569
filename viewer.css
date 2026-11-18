@@ -140,7 +140,7 @@ body[data-page="home"] .competition { position: relative; margin-top: -38px; pad
 .venue-list small { display: block; color: var(--muted); }
 .venue-list li { display: flex; align-items: center; gap: 7px; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .table-scroll { overflow-x: auto; margin-top: 8px; }
-table { width: 100%; min-width: 310px; border-collapse: collapse; text-align: center; font-size: 13px; }
+table { width: 100%; min-width: 480px; border-collapse: collapse; text-align: center; font-size: 13px; }
 th, td { padding: 6px 5px; border-bottom: 1px solid var(--line); }
 thead th { background: var(--sport-bg,#e1efff); white-space: nowrap; }
 tbody th, thead th:nth-child(2) { text-align: left; }
@@ -251,9 +251,16 @@ body[data-page="home"] .site-footer::before {
 .school-game:last-child { border-bottom: 0; }
 .school-game strong, .school-game small { display: block; overflow-wrap: anywhere; }
 .school-game small { color: var(--muted); }
-.school-game > div:last-child { flex: none; text-align: right; }
+.school-game .school-score { flex: none; text-align: right; }
 .school-game small.win { color: #176748; }
 .school-game small.loss { color: #942836; }
 @media (max-width: 760px) {
   .school-directory, .school-summary { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+.set-breakdown { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 8px; padding-block: 3px 7px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.set-breakdown > span { padding: 2px 6px; border-radius: 6px; background: var(--sport-bg,#edf6ff); }
+.set-breakdown > strong { color: var(--sport,var(--deep)); }
+.score > small { align-self: center; color: inherit; font: 600 11px/1 var(--text); }
+.school-game { flex-wrap: wrap; }
+.school-game .set-breakdown { flex: 0 0 100%; }

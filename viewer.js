@@ -1,8 +1,8 @@
 import {readSports} from './sports-api.js';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
-  minutes, clock, ordered, fieldName, options, standings,
-} from './sports-data.js?v=20261118-volleyball';
+  minutes, clock, ordered, fieldName, options, standings, usesSets, setResult,
+} from './sports-data.js?v=20261118-set-scoring';
 
 const content = document.getElementById('competition-content');
 const search = document.getElementById('team-search');
@@ -101,9 +101,18 @@ function signed(value) {
   return value > 0 ? '+' + value : value < 0 ? '−' + Math.abs(value) : '0';
 }
 
+function setBreakdown(match, reverse = false) {
+  if (!match.scoreSets?.length) return '';
+  const sets = reverse ? match.scoreSets.map(([home, away]) => [away, home]) : match.scoreSets;
+  const {points} = setResult(sets);
+  return '<div class="set-breakdown">' + sets.map((pair, i) =>
+    '<span>เซต ' + (i + 1) + ' <b>' + pair.join('–') + '</b></span>').join('') +
+    '<strong>แต้มรวม ' + points.join('–') + '</strong></div>';
+}
+
 function matchup(match, scored) {
   const scores = scored ? '<span class="score" role="img" aria-label="คะแนน ' + esc(match.homeScore) + ' ต่อ ' +
-    esc(match.awayScore) + '">' + esc(match.homeScore) + '<span aria-hidden="true">–</span>' + esc(match.awayScore) + '</span>' :
+    esc(match.awayScore) + '">' + esc(match.homeScore) + '<span aria-hidden="true">–</span>' + esc(match.awayScore) + (usesSets(match.sport) ? '<small aria-hidden="true">เซต</small>' : '') + '</span>' :
     '<span class="versus">พบ</span>';
   return '<div class="matchup"><strong class="team' + (match.winnerSide === 'home' ? ' winner' : '') +
     '">' + esc(match.home) + '</strong>' + scores + '<strong class="team' +
@@ -119,8 +128,8 @@ function fixture(match, compact = false) {
   const outcome = match.winnerSide ? 'ชนะ ' + esc(match[match.winnerSide]) : 'เสมอ';
   const difference = Number(match.homeScore) - Number(match.awayScore);
   const state = scored ? '<span class="match-state played">' + outcome +
-    '</span><span class="score-difference" aria-label="ผลต่างแต้มทีมแรก ' + signed(difference) +
-    ' ทีมที่สอง ' + signed(-difference) + '">ผลต่าง ' + signed(difference) + ' / ' + signed(-difference) + '</span>' :
+    '</span>' + (usesSets(match.sport) ? '' : '<span class="score-difference" aria-label="ผลต่างแต้มทีมแรก ' + signed(difference) +
+    ' ทีมที่สอง ' + signed(-difference) + '">ผลต่าง ' + signed(difference) + ' / ' + signed(-difference) + '</span>') :
     match.ready === false ? '<span class="match-state">รอผลจับสลากหรือรอบก่อนหน้า</span>' : '';
   if (compact && !scored) {
     return '<article class="fixture preview-match ' + match.sport + '"><div class="preview-when">' +
@@ -129,7 +138,7 @@ function fixture(match, compact = false) {
       esc(seasonLabel(match)) + '</span></div>' + matchup(match, false) + '</div></article>';
   }
   return '<article class="fixture ' + match.sport + '"><div class="fixture-meta">' + badge(match.sport) +
-    '<span>' + esc(seasonLabel(match)) + '</span></div>' + matchup(match, scored) +
+    '<span>' + esc(seasonLabel(match)) + '</span></div>' + matchup(match, scored) + setBreakdown(match) +
     '<div class="fixture-foot"><span class="fixture-time">' + when + '</span><span>' + venue + '</span>' +
     state + '</div></article>';
 }
@@ -158,17 +167,19 @@ function position(a, b) {
 function groupCards(matches, sport, compact = false) {
   const groups = standings(matches, sport).sort(position);
   if (!groups.length) return empty('ยังไม่มีรายชื่อทีมในรายการนี้');
+  const [forLabel, againstLabel] = sport === 'football' ? ['ประตูได้', 'ประตูเสีย'] :
+    usesSets(sport) ? ['เซตได้', 'เซตเสีย'] : ['แต้มได้', 'แต้มเสีย'];
   const visible = compact ? [groups.find(group => group.rows.some(row => row.played)) || groups[0]] : groups;
   return '<div class="group-grid">' + visible.map(({match, rows}) => {
     const played = rows.some(row => row.played);
     const title = LEVELS[match.level] + TYPES[match.type] + ' · ' +
       (match.group ? 'สาย ' + match.group : 'พบกันหมด');
     const label = compact ? SPORTS[sport] + ' · ' + title : title;
-    return '<section class="group-card ' + sport + '"><h3>' + esc(label) + '</h3>' + (played ?
-      '<div class="table-scroll"><table aria-label="' + esc(label) + '"><thead><tr><th scope="col">อันดับ</th>' +
+    return '<section class="group-card ' + sport + '"><h3>' + esc(label) + '</h3>' + (played || (!compact && sport === 'football') ?
+      '<div class="table-scroll" tabindex="0" role="region" aria-label="เลื่อนดูตารางคะแนน"><table aria-label="' + esc(label) + '"><thead><tr><th scope="col">อันดับ</th>' +
       '<th scope="col">ทีม</th><th scope="col">แข่ง</th><th scope="col">ชนะ</th>' +
       (compact ? '' : '<th scope="col">เสมอ</th><th scope="col">แพ้</th>') +
-      '<th scope="col">แต้มได้</th><th scope="col">แต้มเสีย</th><th scope="col">ผลต่าง</th><th scope="col">คะแนน</th></tr></thead><tbody>' +
+      '<th scope="col">' + forLabel + '</th><th scope="col">' + againstLabel + '</th><th scope="col">ผลต่าง</th><th scope="col">คะแนน</th></tr></thead><tbody>' +
       rows.map(row => '<tr><td>' + (row.played ? row.rank : '–') + '</td><th scope="row">' + esc(row.name) +
         '</th><td>' + row.played + '</td><td>' + row.wins + '</td>' +
         (compact ? '' : '<td>' + row.ties + '</td><td>' + row.losses + '</td>') +
@@ -303,7 +314,7 @@ function schoolMatch(match, school) {
   const against = Number(home ? match.awayScore : match.homeScore);
   const outcome = match.winnerSide ? (match.winnerSide === side ? 'win' : 'loss') :
     own > against ? 'win' : own < against ? 'loss' : 'draw';
-  return {match, own, against, outcome, opponent: home ? match.away : match.home};
+  return {match, home, own, against, outcome, opponent: home ? match.away : match.home};
 }
 
 function schoolStats(games) {
@@ -319,15 +330,25 @@ function schoolStats(games) {
 function schoolResultGroup(sport, games) {
   const stats = schoolStats(games);
   const labels = {win: 'ชนะ', draw: 'เสมอ', loss: 'แพ้'};
+  const setSport = usesSets(sport);
+  const [forLabel, againstLabel] = sport === 'football' ? ['ประตูได้', 'ประตูเสีย'] :
+    setSport ? ['เซตได้', 'เซตเสีย'] : ['แต้มได้', 'แต้มเสีย'];
+  const withSets = games.filter(game => game.match.scoreSets?.length);
+  const points = withSets.reduce((sum, {match, home}) => {
+    const values = setResult(match.scoreSets).points;
+    return [sum[0] + values[home ? 0 : 1], sum[1] + values[home ? 1 : 0]];
+  }, [0, 0]);
+  const totalPoints = withSets.length ? '<span>แต้มรวม ' + points.join('–') +
+    (withSets.length === games.length ? '' : ' (' + withSets.length + ' คู่ที่มีแต้มรายเซต)') + '</span>' : '';
   return '<section class="group-card school-sport ' + sport + '"><h2>' + badge(sport) + '</h2>' +
     '<p class="school-totals">ชนะ ' + stats.win + ' · เสมอ ' + stats.draw + ' · แพ้ ' + stats.loss +
-    ' <span>แต้มได้ ' + stats.own + ' · แต้มเสีย ' + stats.against + ' · ผลต่าง ' +
-    signed(stats.own - stats.against) + '</span></p><div class="school-games">' +
-    games.map(({match, own, against, outcome, opponent}) =>
+    '<span>' + forLabel + ' ' + stats.own + ' · ' + againstLabel + ' ' + stats.against + ' · ผลต่าง ' +
+    signed(stats.own - stats.against) + '</span>' + totalPoints + '</p><div class="school-games">' +
+    games.map(({match, home, own, against, outcome, opponent}) =>
       '<article class="school-game"><div><small>' + esc(seasonLabel(match)) + ' · ' + DAYS[match.day] +
-      '</small><strong>พบ ' + esc(opponent) + '</strong></div><div><span class="score" aria-label="แต้มได้ ' +
-      own + ' แต้มเสีย ' + against + '">' + own + ' – ' + against + '</span><small class="outcome ' + outcome +
-      '">' + labels[outcome] + ' · ' + signed(own - against) + '</small></div></article>').join('') + '</div></section>';
+      '</small><strong>พบ ' + esc(opponent) + '</strong></div><div class="school-score"><span class="score" aria-label="' + forLabel + ' ' +
+      own + ' ' + againstLabel + ' ' + against + '">' + own + ' – ' + against + (setSport ? '<small aria-hidden="true">เซต</small>' : '') + '</span><small class="outcome ' + outcome +
+      '">' + labels[outcome] + ' · ' + signed(own - against) + '</small></div>' + setBreakdown(match, !home) + '</article>').join('') + '</div></section>';
 }
 
 function schoolsPage(route) {

@@ -8,6 +8,25 @@ const durations = {football: {kg: 25, lower: 35, upper: 41, middle: 45}, volleyb
 const entities = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'};
 
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => entities[char]);
+export const usesSets = sport => sport === 'volleyball' || sport === 'takraw';
+export function setResult(sets) {
+  if (!Array.isArray(sets) || sets.length > 3) throw new Error('กรอกผลได้สูงสุด 3 เซต');
+  const wins = [0, 0];
+  const points = [0, 0];
+  for (const pair of sets) {
+    if (!Array.isArray(pair) || pair.length !== 2 ||
+        !pair.every(score => Number.isInteger(score) && score >= 0 && score <= 999)) {
+      throw new Error('กรอกแต้มทั้งสองทีมในแต่ละเซตเป็นจำนวนเต็ม 0–999');
+    }
+    if (wins.includes(2)) throw new Error('จบการแข่งขันเมื่อทีมใดทีมหนึ่งชนะ 2 เซต');
+    if (pair[0] === pair[1]) throw new Error('แต้มในเซตเดียวกันต้องมีผู้ชนะ');
+    wins[pair[0] > pair[1] ? 0 : 1]++;
+    points[0] += pair[0];
+    points[1] += pair[1];
+  }
+  return {wins, points, finished: wins.includes(2)};
+}
+
 export const hasScore = match => match.homeScore !== '' && match.awayScore !== '';
 export function duration({sport, level}) {
   return sport === 'football' ? durations.football[level] : durations[sport];
