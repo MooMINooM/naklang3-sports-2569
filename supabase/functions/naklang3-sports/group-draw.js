@@ -119,7 +119,7 @@ export function createGroupDraw(inputPlans, seed, previous = {}) {
           state.signatures.set(oldSignature, state.signatures.get(oldSignature) - 1);
           state.signatures.set(newSignature, (state.signatures.get(newSignature) || 0) + 1);
         }
-        if (state.score < bestScore) {
+        if (state.score <= bestScore) {
           bestScore = state.score;
           bestOrders = orders.map(order => [...order]);
         }
@@ -139,5 +139,7 @@ export function createGroupDraw(inputPlans, seed, previous = {}) {
     return [plan.key, Object.fromEntries(plan.slots.map((slot, i) => [slot, order[i]]))];
   }));
   const after = metrics(plans, plans.map(plan => plan.slots.map(slot => assignments[plan.key][slot])));
-  return {algorithm: 'balanced-school-pairs-v1', seed, assignments, before, after, events: plans.length};
+  const initialAssignments = Object.fromEntries(plans.map((plan, index) =>
+    [plan.key, Object.fromEntries(plan.slots.map((slot, i) => [slot, initial[index][i]]))]));
+  return {algorithm: 'balanced-school-pairs-v1', seed, initialAssignments, assignments, before, after, events: plans.length};
 }
