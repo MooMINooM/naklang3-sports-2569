@@ -185,13 +185,24 @@ function numberedRoster_(matches,roster,teamNumbers){
  for(const [key,event] of events_(matches)){
    const slots=slots_(event);
    if(slots.length>TEAM_NUMBERS.length)throw new Error('รายการมีเลขทีมเกินจำนวนที่กำหนด');
-   const numbers=Object.fromEntries(slots.map((slot,i)=>[slot,TEAM_NUMBERS[i]]));
+   const savedNumbers=roster.get(key)?.numbers;
+   const numbers=Object.fromEntries(slots.map((slot,i)=>[slot,savedNumbers?.[slot]||TEAM_NUMBERS[i]]));
    const entries=event[0].level!=='middle'?sportTeamNumbers(teamNumbers,event[0].sport):TEAM_NUMBERS.map(number=>({number,school:teamNumbers[number]||''}));
    const schools=Object.fromEntries(entries.map(entry=>[entry.number,entry.school]));
+   if(savedNumbers&&(new Set(Object.values(numbers)).size!==slots.length||Object.values(numbers).some(number=>!Object.hasOwn(schools,number))))throw new Error('เลขทีมในผลสุ่มสายไม่ครบหรือซ้ำกัน');
    const names=Object.fromEntries(slots.map(slot=>[slot,schools[numbers[slot]]||'']));
    result.set(key,{...roster.get(key),...names,numbers});
  }
  return result;
+}
+
+function groupDrawPlans(matches,teamNumbers){
+ return [...events_(matches)].filter(([,event])=>event.some(match=>match.stage==='group')).map(([key,event])=>{
+   const games=event.filter(match=>match.stage==='group');
+   return {key,sport:games[0].sport,slots:slots_(games),
+     groups:['A','B','C'].map(group=>slots_(games.filter(match=>match.group===group))).filter(group=>group.length),
+     entries:sportTeamNumbers(teamNumbers,games[0].sport)};
+ });
 }
 
 function competition_(matches,roster,canEdit){
@@ -247,4 +258,4 @@ function checkDependencies_(before,after,priorRoster,nextRoster){
  }
 }
 
-export { check, scoreMatch_, scored_, managed_, resultSide_, eventKey_, slots_, competition_, numberedRoster_, validateTeamName_, checkDependencies_, TEAM_NUMBERS, COLUMNS, FIELDS, SCHOOLS };
+export { groupDrawPlans, check, scoreMatch_, scored_, managed_, resultSide_, eventKey_, slots_, competition_, numberedRoster_, validateTeamName_, checkDependencies_, TEAM_NUMBERS, COLUMNS, FIELDS, SCHOOLS };

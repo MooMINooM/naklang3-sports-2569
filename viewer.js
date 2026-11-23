@@ -1,6 +1,6 @@
 import {schoolNameMarkup} from './school-label.js?v=20261123-wide-groups';
 import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
-import {readSports} from './sports-api.js?v=20261123-supabase';
+import {readSports} from './sports-api.js?v=20261123-random-draw';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, standings, usesSets,
@@ -281,7 +281,7 @@ function teamPage(route) {
   const sport = route.sport || 'football';
   return (route.page === 'sport' ? '<h2 class="list-heading">ทีมและสาย</h2>' :
     heading('ทีม สาย และตารางคะแนน') + sportNav(sport, 'teams')) +
-    filters({...route, sport}) + qualifiers({...route, sport}) + groupCards(filtered({...route, sport}), sport);
+    filters({...route, sport}) + (data.groupDrawInfo && filtered({...route, sport}).some(match => match.stage === 'group') ? '<p class="list-count">สุ่มสายแบบกระจายคู่แข่ง ' + data.groupDrawInfo.events + ' รายการ · รหัส ' + esc(data.groupDrawInfo.seed.slice(0, 8)) + '</p>' : '') + qualifiers({...route, sport}) + groupCards(filtered({...route, sport}), sport);
 }
 
 function knockoutPage(route) {

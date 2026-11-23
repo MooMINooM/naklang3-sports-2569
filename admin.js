@@ -1,7 +1,7 @@
 import {schoolNameMarkup} from './school-label.js?v=20261123-wide-groups';
 import {sportTeamNumbers} from './supabase/functions/naklang3-sports/team-numbering.js?v=20261123-combined';
 import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
-import {readSports, saveMatch, saveDraw, saveTeamNumbers} from './sports-api.js?v=20261123-supabase';
+import {readSports, saveMatch, saveDraw, saveTeamNumbers, randomizeGroups} from './sports-api.js?v=20261123-random-draw';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, blank, usesSets, setResult,
@@ -59,6 +59,8 @@ function render() {
   workspace.hidden = !key;
   if (!key) return;
   if (!numbersDirty) renderTeamNumbers();
+  const drawInfo = data.groupDraw;
+  byId('group-draw-summary').textContent = drawInfo ? 'สุ่มสายแล้ว ' + drawInfo.events + ' รายการ · คู่โรงเรียนร่วมสายหลากหลาย ' + drawInfo.before.distinctPairs + ' → ' + drawInfo.after.distinctPairs + '/' + drawInfo.after.possiblePairs + ' คู่ · คู่เดิมร่วมสายสูงสุด ' + drawInfo.after.maxPairMeetings + ' รายการ · รหัส ' + drawInfo.seed : 'ยังไม่ได้สุ่มกระจายสาย';
 
   byId('open-team-numbers').disabled = data.formatVersion < 4 || !data.teamNumbers;
   byId('open-draw').disabled = !data.draws?.some(draw => draw.level !== 'middle');
@@ -541,5 +543,26 @@ numbersForm.addEventListener('submit', async event => {
   } finally {
     busy = save.disabled = false;
     byId('team-number-fields').inert = false;
+  }
+});
+
+byId('randomize-groups').addEventListener('click', async () => {
+  if (busy || !key) return;
+  if (numbersDirty) {
+    status('workspace-status', 'บันทึกหมายเลขโรงเรียนก่อนสุ่มสาย', true);
+    return;
+  }
+  const button = byId('randomize-groups');
+  busy = button.disabled = true;
+  status('workspace-status', 'กำลังสุ่มสายเพื่อกระจายคู่โรงเรียนร่วมสาย…');
+  try {
+    await randomizeGroups(key);
+    data = await readSports(key);
+    render();
+    status('workspace-status', 'บันทึกผลสุ่มสายแล้ว เวลาเริ่ม จบ และสนามใช้คิวเดิม');
+  } catch (error) {
+    status('workspace-status', error.message, true);
+  } finally {
+    busy = button.disabled = false;
   }
 });

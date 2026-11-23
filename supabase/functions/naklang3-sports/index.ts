@@ -1,5 +1,6 @@
+import {createGroupDraw} from './group-draw.js';
 import {
-  check, scoreMatch_, scored_, managed_, eventKey_, competition_, numberedRoster_,
+  groupDrawPlans, check, scoreMatch_, scored_, managed_, eventKey_, competition_, numberedRoster_,
   validateTeamName_, checkDependencies_, TEAM_NUMBERS, COLUMNS, FIELDS,
 } from './rules.js';
 
@@ -36,7 +37,8 @@ async function authorized(key, hash) {
 }
 
 function roster(config) {
-  return new Map(Object.entries(config.roster || {}).map(([key, tieOrder]) => [key, {tieOrder}]));
+  const keys = new Set([...Object.keys(config.roster || {}), ...Object.keys(config.groupDraw?.assignments || {})]);
+  return new Map([...keys].map(key => [key, {tieOrder: config.roster?.[key] || '', numbers: config.groupDraw?.assignments?.[key]}]));
 }
 
 function output(snapshot, canEdit) {
@@ -45,7 +47,8 @@ function output(snapshot, canEdit) {
   const competition = competition_(matches.filter(match => canEdit || match.published), draw, canEdit);
   return {...competition, fields: FIELDS, schools: config.schools, settings: config.settings,
     schoolLogos: config.schoolLogos, canEdit, formatVersion: 6, version,
-    ...(canEdit ? {teamNumbers: config.teamNumbers} : {})};
+    groupDrawInfo: config.groupDraw ? {seed: config.groupDraw.seed, createdAt: config.groupDraw.createdAt, events: config.groupDraw.events, after: config.groupDraw.after} : null,
+    ...(canEdit ? {teamNumbers: config.teamNumbers, groupDraw: config.groupDraw || null} : {})};
 }
 
 function saveMatch(snapshot, input) {
@@ -134,6 +137,19 @@ function saveDraw(snapshot, input) {
   return true;
 }
 
+function randomizeGroups(snapshot) {
+  const plans = groupDrawPlans(snapshot.matches, snapshot.config.teamNumbers);
+  const keys = new Set(plans.map(plan => plan.key));
+  if (snapshot.matches.some(match => keys.has(eventKey_(match)) && scored_(match))) {
+    throw new Error('มีผลการแข่งขันในรายการแบ่งสายแล้ว กรุณาล้างผลก่อนสุ่มสายใหม่');
+  }
+  const result = createGroupDraw(plans, crypto.randomUUID(), snapshot.config.groupDraw?.assignments || {});
+  result.createdAt = new Date().toISOString();
+  snapshot.config.groupDraw = result;
+  for (const key of keys) delete snapshot.config.roster[key];
+  return {seed: result.seed, before: result.before, after: result.after};
+}
+
 Deno.serve(async request => {
   if (request.method === 'OPTIONS') return new Response('ok', {headers: cors});
   if (request.method !== 'POST') return Response.json({error: 'ใช้ POST สำหรับระบบการแข่งขัน'}, {status: 405, headers: cors});
@@ -141,7 +157,7 @@ Deno.serve(async request => {
     const body = await request.text();
     if (body.length > 32768) throw new Error('ข้อมูลคำขอมีขนาดใหญ่เกินไป');
     const message = JSON.parse(body);
-    if (!['read','save','saveDraw','saveTeamNumbers'].includes(message.action)) throw new Error('คำสั่งไม่ถูกต้อง');
+    if (!['read','save','saveDraw','saveTeamNumbers','randomizeGroups'].includes(message.action)) throw new Error('คำสั่งไม่ถูกต้อง');
     const snapshot = await rpc('sports_naklang3_snapshot', {p_import_id: importId});
     const canEdit = await authorized(message.key, snapshot.admin_key_hash);
     if (message.action === 'read') {
@@ -154,6 +170,7 @@ Deno.serve(async request => {
     if (message.action === 'save') value = saveMatch(snapshot, message.match);
     if (message.action === 'saveDraw') value = saveDraw(snapshot, message.draw);
     if (message.action === 'saveTeamNumbers') value = saveNumbers(snapshot, message.teams);
+    if (message.action === 'randomizeGroups') value = randomizeGroups(snapshot);
     const resolved = output(snapshot, true);
     const teams = snapshot.teams.map(team => {
       const event = snapshot.events.find(event => event.id === team.event_id);

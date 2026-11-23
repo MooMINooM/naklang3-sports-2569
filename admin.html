@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
   <link rel="stylesheet" href="admin.css?v=20261123-combined">
-  <script type="module" src="admin.js?v=20261123-wide-groups"></script>
+  <script type="module" src="admin.js?v=20261123-random-draw"></script>
   <link rel="stylesheet" href="knockout.css?v=20261123-knockout">
   <link rel="stylesheet" href="school-label.css?v=20261123-wide-groups">
 </head>
@@ -33,10 +33,12 @@
           <button type="button" id="logout">ออกจากระบบ</button>
           <button type="button" id="open-team-numbers">กำหนดหมายเลขโรงเรียน</button>
           <button type="button" id="open-knockout">รอบ 4 ทีมและรอบชิง</button>
+          <button type="button" id="randomize-groups">สุ่มสายแบบกระจายคู่แข่ง</button>
           <button type="button" id="open-draw">ตัดสินอันดับเมื่อเสมอ</button>
           <button type="button" id="new-match" class="primary">เพิ่มคู่แข่งขัน</button>
         </div>
       </div>
+      <p id="group-draw-summary" class="status"></p>
       <p id="workspace-status" class="status" role="status"></p>
       <section id="team-numbers-panel" class="panel number-panel" aria-labelledby="team-numbers-title">
         <form id="team-numbers-form">
