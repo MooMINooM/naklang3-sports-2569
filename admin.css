@@ -69,3 +69,18 @@ input,select{width:100%;min-width:0}
 .row-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .row-actions button { white-space: nowrap; }
 .form-actions button:disabled { cursor: not-allowed; }
+
+.number-panel { margin-block: 18px 24px; scroll-margin-top: 20px; overflow: hidden; }
+.number-panel-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 18px; background: #edf5ff; border-bottom: 1px solid var(--line); }
+.number-panel-heading h2 { font-size: 22px; }
+.number-panel-heading p { margin-bottom: 0; }
+#team-numbers-summary { color: var(--action); white-space: nowrap; }
+.number-table { min-width: 720px; }
+.number-table th:nth-child(1) { width: 36%; }
+.number-table th:nth-child(2) { width: 19%; }
+.number-table input, .number-table select { width: 100%; min-width: 0; }
+.number-logo { display: flex; align-items: center; gap: 10px; }
+.number-logo > span { display: grid; place-items: center; width: 36px; flex-shrink: 0; }
+.number-logo img { object-fit: contain; }
+.number-panel-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-top: 1px solid var(--line); }
+.number-panel-footer .status { margin: 0; }

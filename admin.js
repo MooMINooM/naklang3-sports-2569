@@ -17,7 +17,7 @@ const sportFilter = byId('sport-filter');
 const drawDialog = byId('draw-dialog');
 const drawForm = byId('draw-form');
 const drawFields = drawForm.elements;
-const numbersDialog = byId('team-numbers-dialog');
+const numbersPanel = byId('team-numbers-panel');
 const numbersForm = byId('team-numbers-form');
 const teamNumbers = Array.from({length: 10}, (_, i) => String(i + 1));
 const managedFields = ['sport', 'level', 'type', 'stage', 'group'];
@@ -28,6 +28,9 @@ let editing = null;
 let scoreOnly = false;
 let busy = false;
 let clearSets = false;
+let numberRows = [];
+let numberPrevious = {};
+let numbersDirty = false;
 const setGrid = byId('set-grid');
 setGrid.innerHTML = '<div></div><strong id="set-team-home">ทีมที่ 1</strong><strong id="set-team-away">ทีมที่ 2</strong>' + [1, 2, 3].map(set => '<div class="set-label">เซต ' + set + '</div>' +
   ['home', 'away'].map((side, i) => '<input data-set type="number" min="0" max="999" name="' + side + 'Set' + set +
@@ -47,6 +50,7 @@ function render() {
   loginPanel.hidden = Boolean(key);
   workspace.hidden = !key;
   if (!key) return;
+  if (!numbersDirty) renderTeamNumbers();
 
   byId('open-team-numbers').disabled = data.formatVersion < 4 || !data.teamNumbers;
   byId('open-draw').disabled = !data.draws?.some(draw => draw.level !== 'middle');
@@ -85,6 +89,7 @@ function render() {
 
 function endSession(message = '') {
   key = '';
+  numbersDirty = false;
   data = blank;
   list.replaceChildren();
   login.reset();
@@ -415,40 +420,89 @@ drawForm.addEventListener('submit', async event => {
 });
 
 function renderTeamNumbers() {
-  byId('number-schools').innerHTML = data.schools.concat('บ้านหนองด้วง–ซำขอนแก่น')
+  numberPrevious = Object.fromEntries(teamNumbers.map(number => [number, data.teamNumbers?.[number] || '']));
+  numberRows = [...new Set([...data.schools, ...Object.values(numberPrevious).filter(Boolean)])];
+  byId('number-schools').innerHTML = [...new Set(data.schools.concat('บ้านหนองด้วง–ซำขอนแก่น'))]
     .map(name => '<option value="' + esc(name) + '"></option>').join('');
-  byId('team-number-fields').innerHTML = teamNumbers.map(number =>
-    '<label>ทีม ' + number + ' <input name="team-' + number + '" maxlength="100" list="number-schools" value="' +
-    esc(data.teamNumbers[number] || '') + '"></label><label>ลิงก์โลโก้ทีม ' + number + ' <input type="url" name="logo-' + number + '" maxlength="1500" placeholder="https://…" value="' + esc(data.schoolLogos?.[data.teamNumbers[number]] || '') + '"></label>').join('');
+  const rows = numberRows.map((name, index) => {
+    const number = teamNumbers.find(number => numberPrevious[number] === name) || '';
+    const logo = data.schoolLogos?.[name] || '';
+    return '<tr><td><input name="school-' + index + '" aria-label="โรงเรียนแถวที่ ' + (index + 1) +
+      '" maxlength="100" list="number-schools" value="' + esc(name) + '"></td><td><select name="number-' + index +
+      '" aria-label="หมายเลขทีมของ ' + esc(name) + '">' + options(Object.fromEntries(teamNumbers.map(number =>
+        [number, 'ทีม ' + number])), number, 'ยังไม่กำหนด') + '</select></td><td><div class="number-logo">' +
+      '<span id="number-logo-' + index + '">' + (logo ? '<img src="' + esc(logo) +
+        '" alt="" width="36" height="44">' : '') + '</span><input type="url" name="logo-' + index +
+      '" aria-label="ลิงก์โลโก้ของ ' + esc(name) + '" maxlength="1500" placeholder="ลิงก์รูป HTTPS" value="' +
+      esc(logo) + '"></div></td></tr>';
+  });
+  byId('team-number-fields').innerHTML = '<table class="number-table"><thead><tr><th scope="col">โรงเรียน</th>' +
+    '<th scope="col">หมายเลขทีม</th><th scope="col">โลโก้โรงเรียน</th></tr></thead><tbody>' + rows.join('') + '</tbody></table>';
+  byId('team-numbers-summary').textContent = 'กำหนดแล้ว ' + Object.values(numberPrevious).filter(Boolean).length + ' / 10 หมายเลข';
   status('team-numbers-status', '');
 }
 
 byId('open-team-numbers').addEventListener('click', () => {
   if (busy || !data.teamNumbers) return;
-  renderTeamNumbers();
-  numbersDialog.showModal();
+  numbersPanel.scrollIntoView({behavior: 'smooth', block: 'start'});
+  numbersForm.querySelector('select')?.focus({preventScroll: true});
 });
-byId('close-team-numbers').addEventListener('click', () => { if (!busy) numbersDialog.close(); });
-numbersDialog.addEventListener('cancel', event => { if (busy) event.preventDefault(); });
+numbersForm.addEventListener('input', () => { numbersDirty = true; });
+numbersForm.addEventListener('change', event => {
+  if (!event.target.name.startsWith('school-')) return;
+  const index = Number(event.target.name.slice(7));
+  const logo = data.schoolLogos?.[event.target.value.trim()] || '';
+  numbersForm.elements['logo-' + index].value = logo;
+  byId('number-logo-' + index).innerHTML = logo ? '<img src="' + esc(logo) + '" alt="" width="36" height="44">' : '';
+});
+
+function enteredTeamNumbers(values) {
+  const teams = Object.fromEntries(teamNumbers.map(number => [number, '']));
+  const logos = {};
+  const names = new Set();
+  for (let index = 0; index < numberRows.length; index++) {
+    const name = String(values.get('school-' + index) || '').trim();
+    const number = String(values.get('number-' + index) || '');
+    const logo = String(values.get('logo-' + index) || '').trim();
+    if (!number) {
+      if (logo !== (data.schoolLogos?.[name] || '')) throw new Error('เลือกหมายเลขของ ' + name + ' ก่อนบันทึกโลโก้');
+      continue;
+    }
+    if (!teamNumbers.includes(number)) throw new Error('เลือกหมายเลขทีม 1–10');
+    if (!name) throw new Error('กรอกชื่อโรงเรียนสำหรับทีม ' + number);
+    if (teams[number]) throw new Error('หมายเลขทีม ' + number + ' ถูกเลือกซ้ำ กรุณาเลือกหมายเลขให้ต่างกัน');
+    if (names.has(name)) throw new Error('โรงเรียน ' + name + ' ถูกกำหนดมากกว่าหนึ่งหมายเลข');
+    teams[number] = name;
+    logos[number] = logo;
+    names.add(name);
+  }
+  return {teams, previous: {...numberPrevious}, logos};
+}
+
 numbersForm.addEventListener('submit', async event => {
   event.preventDefault();
   if (busy || !key) return;
+  let input;
+  try {
+    input = enteredTeamNumbers(new FormData(numbersForm));
+  } catch (error) {
+    status('team-numbers-status', error.message, true);
+    return;
+  }
   const save = byId('save-team-numbers');
   busy = save.disabled = true;
-  status('team-numbers-status', 'กำลังบันทึกเลขทีม…');
+  byId('team-number-fields').inert = true;
+  status('team-numbers-status', 'กำลังบันทึกหมายเลขโรงเรียน…');
   try {
-    const values = new FormData(numbersForm);
-    const teams = Object.fromEntries(teamNumbers.map(number => [number, values.get('team-' + number)]));
-    const previous = Object.fromEntries(teamNumbers.map(number => [number, data.teamNumbers[number] || '']));
-    const logos = Object.fromEntries(teamNumbers.map(number => [number, values.get('logo-' + number) || '']));
-    await saveTeamNumbers(key, {teams, previous, logos});
+    await saveTeamNumbers(key, input);
     data = await readSports(key);
+    numbersDirty = false;
     render();
-    renderTeamNumbers();
-    status('team-numbers-status', 'บันทึกเลขทีมโรงเรียนแล้ว');
+    status('team-numbers-status', 'บันทึกหมายเลขแล้ว ชื่อและโลโก้อัปเดตในทุกรายการ');
   } catch (error) {
     status('team-numbers-status', error.message, true);
   } finally {
     busy = save.disabled = false;
+    byId('team-number-fields').inert = false;
   }
 });

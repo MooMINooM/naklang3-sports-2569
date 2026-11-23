@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
-  <link rel="stylesheet" href="admin.css?v=20261118-admin-results">
-  <script type="module" src="admin.js?v=20261123-supabase"></script>
+  <link rel="stylesheet" href="admin.css?v=20261123-school-numbers">
+  <script type="module" src="admin.js?v=20261123-school-numbers"></script>
 </head>
 <body>
   <header class="top">
@@ -29,12 +29,27 @@
         <div class="actions">
           <button type="button" id="refresh">โหลดข้อมูลใหม่</button>
           <button type="button" id="logout">ออกจากระบบ</button>
-          <button type="button" id="open-team-numbers">กำหนดเลขทีมโรงเรียน</button>
+          <button type="button" id="open-team-numbers">กำหนดหมายเลขโรงเรียน</button>
           <button type="button" id="open-draw">ตัดสินอันดับเมื่อเสมอ</button>
           <button type="button" id="new-match" class="primary">เพิ่มคู่แข่งขัน</button>
         </div>
       </div>
       <p id="workspace-status" class="status" role="status"></p>
+      <section id="team-numbers-panel" class="panel number-panel" aria-labelledby="team-numbers-title">
+        <form id="team-numbers-form">
+          <div class="number-panel-heading">
+            <div><h2 id="team-numbers-title">กำหนดหมายเลขโรงเรียน</h2><p>เลือกหมายเลขตามผลจับสลาก เลขเดียวกันใช้โรงเรียนเดียวกันทุกกีฬาและทุกรุ่น</p></div>
+            <strong id="team-numbers-summary"></strong>
+          </div>
+          <div id="team-number-fields" class="scroll"></div>
+          <datalist id="number-schools"></datalist>
+          <div class="number-panel-footer">
+            <p id="team-numbers-status" class="status" role="status"></p>
+            <button type="submit" id="save-team-numbers" class="primary">บันทึกหมายเลขโรงเรียน</button>
+          </div>
+        </form>
+      </section>
+
       <section class="panel">
         <div class="filters">
           <label>วันแข่งขัน <select id="day-filter"></select></label>
@@ -60,7 +75,7 @@
       <div id="match-context" class="match-context" hidden>
         <strong id="match-context-teams"></strong>
         <p id="match-context-details"></p>
-        <button type="button" id="assign-from-score" hidden>กำหนดเลขทีมโรงเรียน</button>
+        <button type="button" id="assign-from-score" hidden>กำหนดหมายเลขโรงเรียน</button>
       </div>
       <fieldset id="match-details" class="form-grid">
         <legend class="sr-only">ข้อมูลคู่แข่งขัน</legend>
@@ -109,18 +124,6 @@
       </div>
     </form>
   </dialog>
-  <dialog id="team-numbers-dialog">
-    <form id="team-numbers-form">
-      <h2>กำหนดเลขทีมโรงเรียน</h2>
-      <p>กรอกชื่อครั้งเดียว เลขเดียวกันใช้ชื่อเดียวกันในทุกกีฬาและทุกรุ่น</p>
-      <div id="team-number-fields" class="form-grid"></div>
-      <datalist id="number-schools"></datalist>
-      <p id="team-numbers-status" class="status" role="status"></p>
-      <div class="actions form-actions">
-        <button type="button" id="close-team-numbers">ปิด</button>
-        <button type="submit" id="save-team-numbers" class="primary">บันทึกเลขทีม</button>
-      </div>
-    </form>
-  </dialog>
+
 </body>
 </html>
