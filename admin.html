@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
-  <link rel="stylesheet" href="admin.css?v=20261123-school-numbers">
-  <script type="module" src="admin.js?v=20261123-knockout"></script>
+  <link rel="stylesheet" href="admin.css?v=20261123-combined">
+  <script type="module" src="admin.js?v=20261123-combined"></script>
   <link rel="stylesheet" href="knockout.css?v=20261123-knockout">
 </head>
 <body>
@@ -40,11 +40,12 @@
       <section id="team-numbers-panel" class="panel number-panel" aria-labelledby="team-numbers-title">
         <form id="team-numbers-form">
           <div class="number-panel-heading">
-            <div><h2 id="team-numbers-title">กำหนดหมายเลขโรงเรียน</h2><p>เลือกหมายเลขตามผลจับสลาก เลขเดียวกันใช้โรงเรียนเดียวกันทุกกีฬาและทุกรุ่น</p></div>
+            <div><h2 id="team-numbers-title">กำหนดหมายเลขโรงเรียน</h2><p>เลือกหมายเลขตามผลจับสลาก ฟุตบอลและวอลเลย์บอลรวมหนองด้วงกับซำขอนแก่นที่เลขน้อยกว่า แล้วยุบช่องเลขที่มากกว่า ส่วนตะกร้อและเปตองใช้เลขจับสลากเดิม</p></div>
             <strong id="team-numbers-summary"></strong>
           </div>
           <div id="team-number-fields" class="scroll"></div>
           <datalist id="number-schools"></datalist>
+          <div id="sport-number-preview" class="sport-number-preview"></div>
           <div class="number-panel-footer">
             <p id="team-numbers-status" class="status" role="status"></p>
             <button type="submit" id="save-team-numbers" class="primary">บันทึกหมายเลขโรงเรียน</button>

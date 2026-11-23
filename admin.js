@@ -1,3 +1,4 @@
+import {sportTeamNumbers} from './supabase/functions/naklang3-sports/team-numbering.js?v=20261123-combined';
 import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
 import {readSports, saveMatch, saveDraw, saveTeamNumbers} from './sports-api.js?v=20261123-supabase';
 import {
@@ -460,7 +461,21 @@ function renderTeamNumbers() {
   byId('team-number-fields').innerHTML = '<table class="number-table"><thead><tr><th scope="col">โรงเรียน</th>' +
     '<th scope="col">หมายเลขทีม</th><th scope="col">โลโก้โรงเรียน</th></tr></thead><tbody>' + rows.join('') + '</tbody></table>';
   byId('team-numbers-summary').textContent = 'กำหนดแล้ว ' + Object.values(numberPrevious).filter(Boolean).length + ' / 10 หมายเลข';
+  renderSportNumbers();
   status('team-numbers-status', '');
+}
+
+function renderSportNumbers() {
+  let teams = data.teamNumbers || {};
+  if (numbersDirty) {
+    try { teams = enteredTeamNumbers(new FormData(numbersForm)).teams; } catch { return; }
+  }
+  byId('sport-number-preview').innerHTML = ['football', 'takraw'].map(sport => {
+    const entries = sportTeamNumbers(teams, sport);
+    return '<section><h3>' + (sport === 'football' ? 'ฟุตบอล / วอลเลย์บอล' : 'ตะกร้อ / เปตอง') + '</h3><ol>' +
+      entries.map(entry => '<li><strong>ทีม ' + esc(entry.number) + '</strong> ' + esc(entry.school || 'รอกำหนดโรงเรียน') +
+      (entry.sourceNumbers.join(',') !== entry.number ? ' <small>(เลขจับสลาก ' + esc(entry.sourceNumbers.join(', ')) + ')</small>' : '') + '</li>').join('') + '</ol></section>';
+  }).join('');
 }
 
 byId('open-team-numbers').addEventListener('click', () => {
@@ -468,7 +483,7 @@ byId('open-team-numbers').addEventListener('click', () => {
   numbersPanel.scrollIntoView({behavior: 'smooth', block: 'start'});
   numbersForm.querySelector('select')?.focus({preventScroll: true});
 });
-numbersForm.addEventListener('input', () => { numbersDirty = true; });
+numbersForm.addEventListener('input', () => { numbersDirty = true; renderSportNumbers(); });
 numbersForm.addEventListener('change', event => {
   if (!event.target.name.startsWith('school-')) return;
   const index = Number(event.target.name.slice(7));

@@ -1,3 +1,4 @@
+import {sportTeamNumbers} from './team-numbering.js';
 const SPORTS={football:'ฟุตบอล',volleyball:'วอลเลย์บอล',takraw:'ตะกร้อ',petanque:'เปตอง'};
 const LEVELS={kg:'อนุบาล',lower:'ประถมต้น',upper:'ประถมปลาย',middle:'มัธยมต้น'};
 const TYPES={boys:'ชาย',girls:'หญิง'};
@@ -185,7 +186,9 @@ function numberedRoster_(matches,roster,teamNumbers){
    const slots=slots_(event);
    if(slots.length>TEAM_NUMBERS.length)throw new Error('รายการมีเลขทีมเกินจำนวนที่กำหนด');
    const numbers=Object.fromEntries(slots.map((slot,i)=>[slot,TEAM_NUMBERS[i]]));
-   const names=Object.fromEntries(slots.map(slot=>[slot,teamNumbers[numbers[slot]]||'']));
+   const entries=event[0].level!=='middle'?sportTeamNumbers(teamNumbers,event[0].sport):TEAM_NUMBERS.map(number=>({number,school:teamNumbers[number]||''}));
+   const schools=Object.fromEntries(entries.map(entry=>[entry.number,entry.school]));
+   const names=Object.fromEntries(slots.map(slot=>[slot,schools[numbers[slot]]||'']));
    result.set(key,{...roster.get(key),...names,numbers});
  }
  return result;
