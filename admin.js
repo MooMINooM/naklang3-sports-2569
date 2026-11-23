@@ -1,8 +1,8 @@
-import {readSports, saveMatch, saveDraw, saveTeamNumbers} from './sports-api.js?v=20261117-team-numbers';
+import {readSports, saveMatch, saveDraw, saveTeamNumbers} from './sports-api.js?v=20261123-supabase';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, blank, usesSets, setResult,
-} from './sports-data.js?v=20261118-set-scoring';
+} from './sports-data.js?v=20261123-supabase';
 
 const byId = id => document.getElementById(id);
 const login = byId('login-form');
@@ -253,13 +253,13 @@ form.addEventListener('submit', async event => {
   const save = byId('save-match');
   const cancel = byId('cancel-match');
   busy = save.disabled = cancel.disabled = true;
-  status('form-status', 'กำลังบันทึกใน Google Sheets…');
+  status('form-status', 'กำลังบันทึกผลการแข่งขัน…');
   try {
     await saveMatch(key, match);
     data = await readSports(key);
     dialog.close();
     render();
-    status('workspace-status', scoreOnly ? 'บันทึกผลการแข่งขันแล้ว' : 'บันทึกคู่แข่งขันใน Google Sheets แล้ว');
+    status('workspace-status', scoreOnly ? 'บันทึกผลการแข่งขันแล้ว' : 'บันทึกคู่แข่งขันแล้ว');
   } catch (error) {
     status('form-status', error.message, true);
   } finally {
@@ -419,7 +419,7 @@ function renderTeamNumbers() {
     .map(name => '<option value="' + esc(name) + '"></option>').join('');
   byId('team-number-fields').innerHTML = teamNumbers.map(number =>
     '<label>ทีม ' + number + ' <input name="team-' + number + '" maxlength="100" list="number-schools" value="' +
-    esc(data.teamNumbers[number] || '') + '"></label>').join('');
+    esc(data.teamNumbers[number] || '') + '"></label><label>ลิงก์โลโก้ทีม ' + number + ' <input type="url" name="logo-' + number + '" maxlength="1500" placeholder="https://…" value="' + esc(data.schoolLogos?.[data.teamNumbers[number]] || '') + '"></label>').join('');
   status('team-numbers-status', '');
 }
 
@@ -440,7 +440,8 @@ numbersForm.addEventListener('submit', async event => {
     const values = new FormData(numbersForm);
     const teams = Object.fromEntries(teamNumbers.map(number => [number, values.get('team-' + number)]));
     const previous = Object.fromEntries(teamNumbers.map(number => [number, data.teamNumbers[number] || '']));
-    await saveTeamNumbers(key, {teams, previous});
+    const logos = Object.fromEntries(teamNumbers.map(number => [number, values.get('logo-' + number) || '']));
+    await saveTeamNumbers(key, {teams, previous, logos});
     data = await readSports(key);
     render();
     renderTeamNumbers();

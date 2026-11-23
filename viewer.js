@@ -1,8 +1,8 @@
-import {readSports} from './sports-api.js';
+import {readSports} from './sports-api.js?v=20261123-supabase';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, standings, usesSets,
-} from './sports-data.js?v=20261118-school-logos';
+} from './sports-data.js?v=20261123-supabase';
 
 const content = document.getElementById('competition-content');
 const search = document.getElementById('team-search');

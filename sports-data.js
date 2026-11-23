@@ -28,7 +28,8 @@ export function setResult(sets) {
 }
 
 export const hasScore = match => match.homeScore !== '' && match.awayScore !== '';
-export function duration({sport, level}) {
+export function duration({sport, level, durationMinutes}) {
+  if (Number.isInteger(durationMinutes) && durationMinutes > 0) return durationMinutes;
   return sport === 'football' ? durations.football[level] : durations[sport];
 }
 export const minutes = time => {

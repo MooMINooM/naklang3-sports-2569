@@ -1,39 +1,9 @@
 <!doctype html>
-<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ตรวจสอบ Google Apps Script — NAKLANG 3</title>
-<link rel="stylesheet" href="./styles.css"><script src="./config.js"></script>
-<style>main{max-width:780px;padding-top:36px}.diag{border:1px solid #d7e2ec;background:#fff;border-radius:16px;padding:25px;margin-bottom:16px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f7fb;padding:15px;border-radius:10px;font-size:13px}.detail{margin:10px 0}.ok{color:#167247}.err{color:#ac2b3d}code{overflow-wrap:anywhere}</style>
-</head><body><header class="header"><div class="shell header-inner"><div class="brand"><span class="brand-logo">N<span>3</span></span><span><strong>NAKLANG 3 SPORTS</strong><small>เครื่องมือวินิจฉัยการเชื่อมต่อ</small></span></div></div></header>
-<main class="shell"><div class="diag"><h2>ตรวจสอบ Google Apps Script</h2><p>ตรวจสอบ API สาธารณะโดยไม่ขอรหัสผ่านผู้ดูแลหรือแก้ไขข้อมูล</p>
-<div class="detail"><b>URL:</b> <code id="api"></code></div>
-<div class="actions"><button id="test" class="primary" type="button">ทดสอบใหม่</button><a id="direct" class="outline" target="_blank" rel="noopener noreferrer">เปิด URL ทดสอบโดยตรง</a><a href="./sheets-api.html" class="outline">กลับหน้าเชื่อมต่อเดิม</a></div></div>
-<div class="diag"><h3>ผลการทดสอบ</h3><pre id="result" role="status">กดทดสอบใหม่เพื่อเริ่ม</pre><p class="hint">หากโหลดสคริปต์ไม่ได้ ให้ตรวจ Deploy → Manage deployments → Edit → New version, Execute as Me และ Who has access Anyone; หาก API ตอบกลับ ok:false ให้ตรวจ setupSheets และ Apps Script Executions</p></div></main>
-<script>
-(function(){
-const config=window.NAKLANG_CONFIG||{}, api=config.apiUrl||'';
-const el=document.getElementById('result'); const direct=document.getElementById('direct');
-document.getElementById('api').textContent=api||'ยังไม่ได้ตั้งค่า';
-let running=false;
-function url(cb){return api+(api.includes('?')?'&':'?')+'action=bootstrap&callback='+encodeURIComponent(cb)+'&_='+Date.now();}
-direct.href=api?url('naklang_cb_preview'):'#';
-function test(){
- if(running)return; running=true;
- if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec/.test(api)){el.textContent='ไม่พบ URL Apps Script ใน config.js';running=false;return;}
- const name='naklang_cb_'+Date.now()+'_'+Math.floor(Math.random()*1000000); const s=document.createElement('script');
- let done=false,timer; el.textContent='กำลังรอการตอบกลับจาก Apps Script ...';
- function finish(){if(done)return false;done=true;running=false;clearTimeout(timer);s.remove();delete window[name];return true;}
- window[name]=function(res){
-  if(!finish())return;
-  if(res && res.ok && res.data){
-    el.className='ok';el.textContent='สำเร็จ — เชื่อมต่อ Google Sheets ได้แล้ว\n'+
-    'โรงเรียน '+(res.data.schools||[]).length+' แห่ง | ทีม '+(res.data.teams||[]).length+
-    ' | รายการ '+(res.data.events||[]).length+' | สนาม '+(res.data.venues||[]).length+
-    ' | คู่แข่งขัน '+(res.data.matches||[]).length;
-  } else {el.className='err';el.textContent='Apps Script ตอบกลับแล้ว แต่พบข้อผิดพลาด:\n'+(res&&res.error?res.error:JSON.stringify(res));}
- };
- s.onerror=function(){if(finish()){el.className='err';el.textContent='โหลด Apps Script ไม่สำเร็จ — ตรวจสิทธิ์ Who has access: Anyone, Execute as: Me, เลือก New version, หรือ URL ของ deployment';}};
- timer=setTimeout(function(){if(finish()){el.className='err';el.textContent='ไม่ได้รับ JSONP callback ภายใน 20 วินาที — อาจเปิด Web app เป็น HTML แทน JavaScript, ใช้ deployment เวอร์ชันเก่า หรือไม่ได้ให้สิทธิ์เข้าถึงแบบ Anyone\nลองเปิด URL ทดสอบโดยตรงเพื่อดูข้อความตอบกลับ';}},20000);
- s.src=url(name);document.head.appendChild(s);
-}
-document.getElementById('test').addEventListener('click',test);test();
-})();
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ตรวจการเชื่อมต่อการแข่งขัน</title><link rel="stylesheet" href="admin.css"></head>
+<body><main><h1>ตรวจการเชื่อมต่อการแข่งขัน</h1><button id="test">ทดสอบการเชื่อมต่อ</button><pre id="result" role="status"></pre><a href="./">ดูการแข่งขัน</a></main>
+<script type="module">
+import {readSports} from './sports-api.js?v=20261123-supabase';
+const button=document.getElementById('test');
+button.addEventListener('click',async()=>{button.disabled=true;const result=document.getElementById('result');result.textContent='กำลังเชื่อมต่อ Supabase…';try{const data=await readSports();result.textContent='เชื่อมต่อ Supabase สำเร็จ\nคู่แข่งขัน '+data.matches.length+' คู่\nสนาม '+data.fields.length+' สนาม';}catch(error){result.textContent=error.message;}finally{button.disabled=false;}});
+button.click();
 </script></body></html>
