@@ -1,3 +1,4 @@
+import {schoolNameMarkup} from './school-label.js?v=20261123-wide-groups';
 import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
 import {readSports} from './sports-api.js?v=20261123-supabase';
 import {
@@ -102,22 +103,8 @@ function signed(value) {
   return value > 0 ? '+' + value : value < 0 ? '−' + Math.abs(value) : '0';
 }
 
-function schoolMark(name) {
-  const raw = Object.hasOwn(data.schoolLogos || {}, name) ? data.schoolLogos[name] : '';
-  if (!raw) return '';
-  try {
-    const url = new URL(raw);
-    if (url.protocol === 'https:' && !url.username && !url.password) {
-      return '<img class="school-mark" src="' + esc(url.href) + '" alt="" width="28" height="28" loading="lazy" referrerpolicy="no-referrer">';
-    }
-  } catch (error) {
-    return '';
-  }
-  return '';
-}
-
 function schoolName(name) {
-  return '<span class="school-name">' + schoolMark(name) + '<span>' + esc(name) + '</span></span>';
+  return schoolNameMarkup(name, data.schoolLogos || {});
 }
 
 function resultCard(match) {
@@ -181,7 +168,7 @@ function groupCards(matches, sport, compact = false) {
   const [forLabel, againstLabel] = sport === 'football' ? ['ประตูได้', 'ประตูเสีย'] :
     usesSets(sport) ? ['เซตได้', 'เซตเสีย'] : ['แต้มได้', 'แต้มเสีย'];
   const visible = compact ? [groups.find(group => group.rows.some(row => row.played)) || groups[0]] : groups;
-  return '<div class="group-grid">' + visible.map(({match, rows}) => {
+  return '<div class="group-grid' + (compact ? '' : ' standings-groups') + '">' + visible.map(({match, rows}) => {
     const showTable = !compact || rows.some(row => row.played);
     const showSetPoints = !compact && usesSets(sport);
     const title = LEVELS[match.level] + TYPES[match.type] + ' · ' +

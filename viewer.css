@@ -113,7 +113,7 @@ body[data-page="home"] .competition { position: relative; margin-top: -38px; pad
 .timeslot > h2 { align-self: start; border-radius: 11px; background: #ddebff; padding: 7px; color: #11437f; font: 700 25px/1.22 var(--display); white-space: nowrap; text-align: center; font-variant-numeric: tabular-nums; }
 .timeslot > h2 small { font: 750 12px/1 var(--text); }
 .timeslot > h2 .slot-day { display: block; margin: 2px 0; }
-.fixtures { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 9px; }
+.fixtures { display: grid; grid-template-columns: 1fr; align-items: start; gap: 9px; }
 .fixture { min-width: 0; padding: 8px 12px; border: 1px solid var(--line); border-left: 4px solid var(--sport); border-radius: 12px; background: #fff; }
 .preview-fixtures .fixture { background: #f7fbff; padding: 7px 9px; }
 .fixture-meta, .fixture-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 3px 9px; color: var(--muted); font-size: 12px; }
@@ -130,7 +130,8 @@ body[data-page="home"] .competition { position: relative; margin-top: -38px; pad
 .match-state { font-size: 11px; color: var(--muted); }
 .match-state.played { color: #176748; font-weight: 800; }
 
-.group-grid, .directory { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 12px; }
+.group-grid { display: grid; grid-template-columns: 1fr; align-items: start; gap: 16px; }
+.directory { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 12px; }
 .panel .group-grid { grid-template-columns: 1fr; }
 .panel .group-card { padding: 10px; background: #f7fbff; box-shadow: none; }
 .group-card h3 { font-size: 16px; color: var(--sport,var(--ink)); }
@@ -274,3 +275,13 @@ body[data-page="home"] .site-footer::before {
 .result-card > small { display: block; text-align: center; color: var(--muted); }
 .sport-results { display: grid; gap: 7px; }
 .sport-results > h2 { margin-bottom: 2px; }
+
+.standings-groups .group-card { padding: 20px; }
+.standings-groups table { min-width: 900px; font-size: 14px; }
+.standings-groups th, .standings-groups td { padding: 12px 10px; }
+.standings-groups th[scope="row"] { min-width: 340px; text-align: left; }
+.standings-groups .school-name { font-size: 15px; line-height: 1.6; }
+.result-list .result-card { padding: 16px 20px; }
+.result-list .matchup { gap: 20px; }
+.result-list .team { font-size: 16px; line-height: 1.7; }
+@media(max-width:620px) { .standings-groups .group-card { padding: 12px; } .result-list .result-card { padding: 12px; } .result-list .matchup { gap: 10px; } }

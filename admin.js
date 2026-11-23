@@ -1,3 +1,4 @@
+import {schoolNameMarkup} from './school-label.js?v=20261123-wide-groups';
 import {sportTeamNumbers} from './supabase/functions/naklang3-sports/team-numbering.js?v=20261123-combined';
 import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
 import {readSports, saveMatch, saveDraw, saveTeamNumbers} from './sports-api.js?v=20261123-supabase';
@@ -73,7 +74,7 @@ function render() {
 
   dayFilter.disabled = roundFilter.value === 'knockout';
   if (roundFilter.value === 'knockout') {
-    list.innerHTML = knockoutMarkup(matches, data.fields, {admin: true, qualifiers: data.qualifiers || []});
+    list.innerHTML = knockoutMarkup(matches, data.fields, {admin: true, qualifiers: data.qualifiers || [], schoolName: name => schoolNameMarkup(name, data.schoolLogos || {})});
     return;
   }
 
@@ -91,7 +92,7 @@ function render() {
       '<small>' + (match.winnerSide ? 'ชนะ: ' + esc(match[match.winnerSide]) : 'เสมอ') + '</small>' :
       match.ready === false ? 'ยังระบุคู่แข่งขันไม่ครบ' : 'รอบันทึกผล';
     return '<tr><td><strong>' + DAYS[match.day] + '</strong><small>' + esc(match.start) + '–' + end +
-      '</small></td><td><strong>' + esc(match.home) + ' พบ ' + esc(match.away) + '</strong><small>' +
+      '</small></td><td><strong>' + schoolNameMarkup(match.home, data.schoolLogos) + ' พบ ' + schoolNameMarkup(match.away, data.schoolLogos) + '</strong><small>' +
       esc(SPORTS[match.sport]) + ' · ' + esc(LEVELS[match.level]) + esc(TYPES[match.type]) + ' · ' + esc(STAGES[match.stage]) +
       (match.group ? ' ' + esc(match.group) : '') + '</small></td><td>' + esc(fieldName(data.fields, match.field)) +
       '</td><td>' + score + '</td><td><span class="pill' + (match.published ? ' live">เผยแพร่แล้ว' : '">ฉบับร่าง') +
@@ -473,7 +474,7 @@ function renderSportNumbers() {
   byId('sport-number-preview').innerHTML = ['football', 'takraw'].map(sport => {
     const entries = sportTeamNumbers(teams, sport);
     return '<section><h3>' + (sport === 'football' ? 'ฟุตบอล / วอลเลย์บอล' : 'ตะกร้อ / เปตอง') + '</h3><ol>' +
-      entries.map(entry => '<li><strong>ทีม ' + esc(entry.number) + '</strong> ' + esc(entry.school || 'รอกำหนดโรงเรียน') +
+      entries.map(entry => '<li><strong>ทีม ' + esc(entry.number) + '</strong> ' + schoolNameMarkup(entry.school || 'รอกำหนดโรงเรียน', data.schoolLogos || {}) +
       (entry.sourceNumbers.join(',') !== entry.number ? ' <small>(เลขจับสลาก ' + esc(entry.sourceNumbers.join(', ')) + ')</small>' : '') + '</li>').join('') + '</ol></section>';
   }).join('');
 }

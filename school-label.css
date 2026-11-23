@@ -1,0 +1,5 @@
+.school-name { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
+.school-name-text { min-width: 0; overflow-wrap: anywhere; }
+.school-marks { display: inline-flex; align-items: center; justify-content: center; gap: 5px; flex: 0 0 auto; }
+.school-mark { flex: 0 0 28px; width: 28px; height: 28px; object-fit: contain; }
+.school-name-combined .school-marks { padding: 3px; border: 1px solid #d4e3f1; border-radius: 8px; background: #fff; }
