@@ -1,0 +1,18 @@
+.knockout-event { margin-block: 20px; padding: 20px; border: 1px solid #cde1f4; border-radius: 18px; background: #fff; }
+.knockout-event > h2 { margin: 0; font-size: 21px; color: #123966; }
+.knockout-rule, .knockout-status, .knockout-meta { color: #52677d; font-size: 13px; }
+.knockout-rule { margin: 7px 0 18px; }
+.knockout-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+.knockout-round { min-width: 0; }
+.knockout-round > h3 { margin: 0 0 12px; padding-bottom: 9px; border-bottom: 3px solid #2584d9; color: #173b66; font-size: 17px; }
+.knockout-match { padding: 14px; margin-bottom: 12px; border: 1px solid #d5e3f0; border-radius: 12px; background: #f7fbff; }
+.knockout-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 8px; margin-bottom: 12px; }
+.knockout-teams { display: grid; gap: 8px; }
+.knockout-teams > strong { font-size: 15px; overflow-wrap: anywhere; }
+.knockout-teams .school-name { justify-content: flex-start; }
+.knockout-score { justify-self: start; padding: 2px 12px; border-radius: 8px; background: #e3efff; color: #0755b1; font-size: 19px; font-weight: 800; }
+.knockout-winner { color: #08753b; }
+.knockout-status { margin: 12px 0 0; }
+.knockout-match .row-actions { margin-top: 12px; }
+.knockout-pending { padding: 10px 12px; background: #fff5d4; border-radius: 8px; color: #754d00; }
+@media(max-width:950px) { .knockout-grid { grid-template-columns: 1fr; } .knockout-event { padding: 15px; } }

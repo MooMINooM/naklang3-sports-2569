@@ -1,3 +1,4 @@
+import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
 import {readSports, saveMatch, saveDraw, saveTeamNumbers} from './sports-api.js?v=20261123-supabase';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
@@ -14,6 +15,9 @@ const form = byId('match-form');
 const fields = form.elements;
 const dayFilter = byId('day-filter');
 const sportFilter = byId('sport-filter');
+const roundFilter = byId('round-filter');
+const levelFilter = byId('level-filter');
+const typeFilter = byId('type-filter');
 const drawDialog = byId('draw-dialog');
 const drawForm = byId('draw-form');
 const drawFields = drawForm.elements;
@@ -39,6 +43,8 @@ const setFields = [...setGrid.querySelectorAll('input')];
 
 dayFilter.innerHTML = options(DAYS, '', 'ทุกวัน');
 sportFilter.innerHTML = options(SPORTS, '', 'ทุกกีฬา');
+levelFilter.innerHTML = options(LEVELS, '', 'ทุกรุ่น');
+typeFilter.innerHTML = options(TYPES, '', 'ทุกประเภท');
 
 function status(id, message, error = false) {
   const target = byId(id);
@@ -57,9 +63,18 @@ function render() {
   const publishedCount = data.matches.filter(match => match.published).length;
   byId('summary').textContent = data.matches.length + ' คู่ · เผยแพร่แล้ว ' + publishedCount + ' คู่';
   const matches = ordered(data.matches.filter(match =>
-    (!dayFilter.value || Number(dayFilter.value) === match.day) &&
+    (roundFilter.value === 'knockout' || !dayFilter.value || Number(dayFilter.value) === match.day) &&
+    (!levelFilter.value || levelFilter.value === match.level) &&
+    (!typeFilter.value || typeFilter.value === match.type) &&
+    (!roundFilter.value || (roundFilter.value === 'knockout' ? ['semi', 'third', 'final'].includes(match.stage) : ['group', 'league'].includes(match.stage))) &&
     (!sportFilter.value || sportFilter.value === match.sport) &&
     (!publishedFilter.value || (publishedFilter.value === 'published') === match.published)));
+
+  dayFilter.disabled = roundFilter.value === 'knockout';
+  if (roundFilter.value === 'knockout') {
+    list.innerHTML = knockoutMarkup(matches, data.fields, {admin: true, qualifiers: data.qualifiers || []});
+    return;
+  }
 
   if (!matches.length) {
     list.innerHTML = '<div class="empty">' + (data.matches.length ? 'ไม่มีคู่ตามตัวกรอง' : 'ยังไม่มีคู่แข่งขัน') + '</div>';
@@ -275,8 +290,14 @@ dialog.addEventListener('cancel', event => { if (busy) event.preventDefault(); }
 byId('cancel-match').addEventListener('click', () => dialog.close());
 byId('logout').addEventListener('click', () => { if (!busy) endSession(); });
 byId('refresh').addEventListener('click', refresh);
+byId('open-knockout').addEventListener('click', () => {
+  if (busy) return;
+  roundFilter.value = 'knockout';
+  render();
+  list.scrollIntoView({behavior: 'smooth', block: 'start'});
+});
 byId('new-match').addEventListener('click', () => edit());
-for (const filter of [dayFilter, sportFilter, publishedFilter]) filter.addEventListener('change', render);
+for (const filter of [dayFilter, sportFilter, publishedFilter, roundFilter, levelFilter, typeFilter]) filter.addEventListener('change', render);
 list.addEventListener('click', event => {
   const action = event.target.closest('[data-edit], [data-score]');
   const id = action?.dataset.score || action?.dataset.edit;

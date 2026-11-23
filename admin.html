@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
   <link rel="stylesheet" href="admin.css?v=20261123-school-numbers">
-  <script type="module" src="admin.js?v=20261123-school-numbers"></script>
+  <script type="module" src="admin.js?v=20261123-knockout"></script>
+  <link rel="stylesheet" href="knockout.css?v=20261123-knockout">
 </head>
 <body>
   <header class="top">
@@ -30,6 +31,7 @@
           <button type="button" id="refresh">โหลดข้อมูลใหม่</button>
           <button type="button" id="logout">ออกจากระบบ</button>
           <button type="button" id="open-team-numbers">กำหนดหมายเลขโรงเรียน</button>
+          <button type="button" id="open-knockout">รอบ 4 ทีมและรอบชิง</button>
           <button type="button" id="open-draw">ตัดสินอันดับเมื่อเสมอ</button>
           <button type="button" id="new-match" class="primary">เพิ่มคู่แข่งขัน</button>
         </div>
@@ -52,6 +54,9 @@
 
       <section class="panel">
         <div class="filters">
+          <label>แสดงรอบ <select id="round-filter"><option value="">คู่แข่งขันทั้งหมด</option><option value="knockout">รอบ 4 ทีมและรอบชิง</option><option value="group">รอบแบ่งกลุ่ม / พบกันหมด</option></select></label>
+          <label>รุ่น <select id="level-filter"></select></label>
+          <label>ประเภท <select id="type-filter"></select></label>
           <label>วันแข่งขัน <select id="day-filter"></select></label>
           <label>กีฬา <select id="sport-filter"></select></label>
           <label>การเผยแพร่

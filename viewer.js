@@ -1,3 +1,4 @@
+import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
 import {readSports} from './sports-api.js?v=20261123-supabase';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
@@ -9,8 +10,8 @@ const search = document.getElementById('team-search');
 const status = document.getElementById('sync');
 const error = document.getElementById('connection-error');
 const sports = Object.keys(SPORTS);
-const routes = ['home', 'schedule', 'results', 'standings', 'schools', 'venues'];
-const sportTabs = {schedule: 'โปรแกรมแข่ง', results: 'ผลการแข่งขัน', teams: 'ทีมและสาย'};
+const routes = ['home', 'schedule', 'results', 'standings', 'knockout', 'schools', 'venues'];
+const sportTabs = {schedule: 'โปรแกรมแข่ง', results: 'ผลการแข่งขัน', teams: 'ทีมและสาย', knockout: 'รอบ 4 ทีมและรอบชิง'};
 const icons = {football: '⚽', volleyball: '🏐', takraw: '', petanque: ''};
 let data;
 let pending = false;
@@ -296,6 +297,12 @@ function teamPage(route) {
     filters({...route, sport}) + qualifiers({...route, sport}) + groupCards(filtered({...route, sport}), sport);
 }
 
+function knockoutPage(route) {
+  return (route.page === 'sport' ? '<h2 class="list-heading">รอบ 4 ทีมและรอบชิง</h2>' :
+    heading('รอบ 4 ทีมและรอบชิง')) + filters(route, {sport: route.page !== 'sport'}) +
+    knockoutMarkup(filtered(route), data.fields, {schoolName, qualifiers: data.qualifiers || []});
+}
+
 function sportPage(route) {
   const divisionTitle = route.dedicated ? LEVELS[route.level] + TYPES[route.type] : '';
   return '<div class="sport-heading ' + route.sport + '">' + sportIcon(route.sport) +
@@ -305,7 +312,7 @@ function sportPage(route) {
     Object.entries(sportTabs).map(([tab, label]) => '<a href="' +
       esc(link('sport', {...route, tab, query: '', day: '1'})) + '"' + (route.tab === tab ? ' aria-current="page"' : '') +
       '>' + label + '</a>').join('') + '</nav>' +
-    {schedule, results, teams: teamPage}[route.tab](route);
+    {schedule, results, teams: teamPage, knockout: knockoutPage}[route.tab](route);
 }
 
 function divisions(route) {
@@ -402,7 +409,7 @@ function render(syncSearch = true) {
     if (item.hash === '#' + route.page) item.setAttribute('aria-current', 'page');
     else item.removeAttribute('aria-current');
   });
-  if (data) content.innerHTML = {home: homepage, schedule, results, standings: teamPage, schools: schoolsPage, venues, sport: sportPage}[route.page](route);
+  if (data) content.innerHTML = {home: homepage, schedule, results, standings: teamPage, knockout: knockoutPage, schools: schoolsPage, venues, sport: sportPage}[route.page](route);
 }
 
 async function refresh() {
