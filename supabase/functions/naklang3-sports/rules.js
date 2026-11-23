@@ -8,7 +8,7 @@ const FIELDS=[
  ['F1','ฟุตบอลอนุบาล','football','kg'],['F2','ฟุตบอลประถมต้น 1','football','lower'],['F3','ฟุตบอลประถมต้น 2','football','lower'],['F4','ฟุตบอลสนามหลัก','football','upper,middle'],
  ['V1','วอลเลย์บอลประถม','volleyball','upper'],['V2','วอลเลย์บอลมัธยม','volleyball','middle'],
  ['T1','ตะกร้อชาย','takraw','upper,middle','boys'],['T2','ตะกร้อหญิง','takraw','upper,middle','girls'],
- ['P1','เปตองชาย','petanque','upper,middle','boys'],['P2','เปตองหญิง 1','petanque','upper,middle','girls'],['P3','เปตองหญิง 2','petanque','upper,middle','girls'],
+ ['P1','เปตองสนาม 1','petanque','upper,middle'],['P2','เปตองสนาม 2','petanque','upper,middle'],['P3','เปตองสนาม 3','petanque','upper,middle'],
 ].map(([id,name,sport,levels,type=''])=>({id,name,sport,levels,type}));
 const SCHOOLS=['บ้านท่าอุทัย','บ้านหนองด้วง','ซำขอนแก่น','บ้านโนนสวรรค์','บ้านโนนไหม','บ้านโนนสวาท','บ้านหนองกรุงศรี','บ้านภูพระโนนผักหวาน','บ้านโนนม่วง','บ้านโนนเมือง'];
 const DURATION={football:{kg:25,lower:35,upper:41,middle:45},volleyball:60,takraw:30,petanque:90};
@@ -23,10 +23,11 @@ function check(m,all,fields,settings){
  const len=duration(m,settings),f=fields.find(x=>x.id===m.field);
  if(!DAYS.includes(m.day)||!Number.isInteger(len)||!TYPES[m.type]||!STAGES[m.stage]||!/^([01]\d|2[0-3]):[0-5]\d$/.test(m.start))return 'วัน เวลา หรือรายการแข่งขันไม่ถูกต้อง';
  const a=minutes(m.start), b=a+len;
- const end=m.day===4?(settings.endDay4||settings.end):settings.end;
- if(a<minutes(m.day===1?settings.minDay1:settings.minOther)||b>minutes(end))return 'เวลาคู่นี้อยู่นอกช่วงแข่งขัน';
- const conversion=(f?.id==='F2'||f?.id==='F3')&&Number(settings.convertDay)>0;
- const at=conversion?Number(settings.convertDay)*1440+minutes(settings.convertTime):Infinity;
+ const end=m.day===4?(settings.endDay4||settings.end):(settings.endBySport?.[m.sport]||settings.end);
+ if(a<minutes(m.day===1?settings.minDay1:settings.minOther)||b>minutes(end)||(m.day===4&&settings.strictDay4&&b===minutes(end)))return 'เวลาคู่นี้อยู่นอกช่วงแข่งขัน';
+ const rule=settings.fieldConversions?.[m.field]||{day:settings.convertDay,time:settings.convertTime};
+ const conversion=(f?.id==='F2'||f?.id==='F3')&&Number(rule.day)>0;
+ const at=conversion?Number(rule.day)*1440+minutes(rule.time):Infinity;
  const t=m.day*1440+a;
  const allowed=conversion&&t>=at?['upper','middle']:f?.levels.split(',');
  if(!f||f.sport!==m.sport||!allowed.includes(m.level)||(f.type&&f.type!==m.type)||(conversion&&t<at&&m.day*1440+b>at))return 'สนามไม่รองรับรายการนี้ในช่วงเวลาที่เลือก';

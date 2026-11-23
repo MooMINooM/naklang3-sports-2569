@@ -184,9 +184,10 @@ function syncMatchChoices(stage = fields.stage.value, field = fields.field.value
   fields.stage.innerHTML = options(stages, stage);
   byId('group-field').hidden = fields.stage.value !== 'group';
 
-  const {convertDay, convertTime} = data.settings;
-  const converted = Number(day) > Number(convertDay) || (Number(day) === Number(convertDay) && start >= convertTime);
   const available = data.fields.filter(venue => {
+    const rule = data.settings.fieldConversions?.[venue.id] || {day: data.settings.convertDay, time: data.settings.convertTime};
+    const convertDay = rule.day, convertTime = rule.time;
+    const converted = Number(day) > Number(convertDay) || (Number(day) === Number(convertDay) && start >= convertTime);
     const levels = ['F2', 'F3'].includes(venue.id) && convertDay && convertTime && converted
       ? ['upper', 'middle'] : venue.levels.split(',');
     return venue.sport === sport && levels.includes(level) && (!venue.type || venue.type === type);
