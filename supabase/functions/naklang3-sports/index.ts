@@ -101,11 +101,15 @@ function saveNumbers(snapshot, input) {
   const draw = roster(config);
   checkDependencies_(snapshot.matches, snapshot.matches,
     numberedRoster_(snapshot.matches, draw, config.teamNumbers), numberedRoster_(snapshot.matches, draw, next));
-  const logos = {};
+  const logos = {...config.schoolLogos};
   for (const number of TEAM_NUMBERS) {
     const name = next[number];
-    const raw = input.logos?.[number] ?? config.schoolLogos[config.teamNumbers[number]] ?? '';
-    if (!raw || !name) continue;
+    const raw = input.logos?.[number] ?? config.schoolLogos[name] ?? '';
+    if (!name) continue;
+    if (!raw) {
+      if (name === config.teamNumbers[number]) delete logos[name];
+      continue;
+    }
     const url = new URL(raw);
     if (url.protocol !== 'https:' || url.username || url.password || raw.length > 1500) throw new Error('ใช้ลิงก์โลโก้ HTTPS ที่เปิดดูได้โดยตรง');
     logos[name] = url.href;
