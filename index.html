@@ -9,10 +9,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fahkwang:wght@600;700&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="viewer.css?v=20261123-wide-groups">
-  <script type="module" src="viewer.js?v=20261124-score-test"></script>
+  <link rel="stylesheet" href="viewer.css?v=20261124-friendly">
+  <script type="module" src="viewer.js?v=20261124-friendly"></script>
   <link rel="stylesheet" href="knockout.css?v=20261123-knockout">
-  <link rel="stylesheet" href="school-label.css?v=20261123-wide-groups">
+  <link rel="stylesheet" href="school-label.css?v=20261124-friendly">
 </head>
 <body>
   <a class="skip" href="#content">ข้ามไปยังเนื้อหา</a>
@@ -27,9 +27,7 @@
         <a href="#schedule">โปรแกรมแข่ง</a>
         <a href="#results">ผลการแข่งขัน</a>
         <a href="#standings">ตารางคะแนน</a>
-        <a href="#knockout">รอบ 4 ทีม</a>
         <a href="#schools">ผลรายโรงเรียน</a>
-        <a href="#venues">โรงเรียนและสนาม</a>
       </nav>
       <form id="team-search" role="search">
         <label class="sr-only" for="query">ค้นหาโรงเรียนหรือทีม</label>
@@ -39,12 +37,6 @@
     </div>
   </header>
   <main id="content" tabindex="-1">
-    <section class="hero" aria-labelledby="event-title">
-      <div class="hero-copy">
-        <h1 id="event-title">กีฬานักเรียน นากลาง 3</h1>
-        <p>ศูนย์เครือข่ายคุณภาพการศึกษานากลาง 3</p>
-      </div>
-    </section>
     <div class="shell competition">
       <div id="connection-error" class="load-error" hidden>
         <p id="error-message" role="alert"></p>
@@ -57,7 +49,7 @@
     <div class="shell footer-inner">
       <span class="footer-brand">🏆 กีฬานักเรียน นากลาง 3</span>
       <p class="sync" id="sync" role="status">กำลังโหลดข้อมูล</p>
-      <a href="admin.html">สำหรับผู้จัด</a>
+      <a href="#venues">สนามแข่งขัน</a><a href="admin.html">สำหรับผู้จัด</a>
     </div>
   </footer>
 </body>

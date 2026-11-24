@@ -2,7 +2,7 @@ import {SPORTS, LEVELS, TYPES, DAYS, escapeHtml as esc, hasScore, ordered, field
 
 const stages = {semi: 'รอบรองชนะเลิศ · 4 ทีม', final: 'ชิงชนะเลิศ', third: 'ชิงอันดับ 3'};
 
-export function knockoutMarkup(matches, fields, {admin = false, schoolName = esc, qualifiers = []} = {}) {
+export function knockoutMarkup(matches, fields, {admin = false, schoolName = esc, qualifiers = [], visibleStages = null} = {}) {
   const events = new Map();
   for (const match of ordered(matches).filter(match => Object.hasOwn(stages, match.stage))) {
     const key = [match.sport, match.level, match.type].join(':');
@@ -49,7 +49,7 @@ export function knockoutMarkup(matches, fields, {admin = false, schoolName = esc
     return '<section class="knockout-event"><h2>' + esc(SPORTS[event.sport] + ' · ' + LEVELS[event.level] + TYPES[event.type]) +
       '</h2><p class="knockout-rule">แชมป์สาย A, B, C และรองแชมป์สายผลงานดีที่สุดเข้ารอบ 4 ทีม</p>' +
       (pendingTie ? '<p class="knockout-pending">รอกรรมการตัดสินอันดับที่สถิติเท่ากัน</p>' : '') +
-      '<div class="knockout-grid">' + Object.entries(stages).map(([stage, title]) => {
+      '<div class="knockout-grid' + (visibleStages?.length === 1 ? ' single-round' : '') + '">' + Object.entries(stages).filter(([stage]) => !visibleStages || visibleStages.includes(stage)).map(([stage, title]) => {
         const rows = games.filter(match => match.stage === stage);
         return '<section class="knockout-round"><h3>' + title + '</h3>' +
           (rows.length ? rows.map(card).join('') : '<p class="empty">ยังไม่มีคู่ที่เผยแพร่</p>') + '</section>';
