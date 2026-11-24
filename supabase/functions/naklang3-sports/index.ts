@@ -46,6 +46,7 @@ function output(snapshot, canEdit) {
   const draw = numberedRoster_(matches, roster(config), config.teamNumbers, config.middleSchoolNumbers);
   const competition = competition_(matches.filter(match => canEdit || match.published), draw, canEdit);
   return {...competition, fields: FIELDS, schools: config.schools, settings: config.settings,
+    simulationInfo: config.scoreSimulation?.active ? {active: true, startedAt: config.scoreSimulation.startedAt, stage: config.scoreSimulation.stage} : null,
     schoolLogos: config.schoolLogos, canEdit, formatVersion: 7, version, middleSchoolsConfigured: config.middleSchoolNumbers?.length === 4,
     groupDrawInfo: config.groupDraw ? {seed: config.groupDraw.seed, createdAt: config.groupDraw.createdAt, events: config.groupDraw.events, after: config.groupDraw.after} : null,
     ...(canEdit ? {teamNumbers: config.teamNumbers, middleSchoolNumbers: config.middleSchoolNumbers || [], groupDraw: config.groupDraw || null} : {})};

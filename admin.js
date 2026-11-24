@@ -1,3 +1,4 @@
+import {showSimulationNotice} from './simulation-notice.js?v=20261124-score-test';
 import {schoolNameMarkup} from './school-label.js?v=20261123-wide-groups';
 import {sportTeamNumbers} from './supabase/functions/naklang3-sports/team-numbering.js?v=20261123-combined';
 import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
@@ -59,6 +60,7 @@ function render() {
   loginPanel.hidden = Boolean(key);
   workspace.hidden = !key;
   if (!key) return;
+  showSimulationNotice(data, document.querySelector('#workspace .workspace-header'));
   if (!numbersDirty) renderTeamNumbers();
   if (!middleDirty) renderMiddleSchools();
   const drawInfo = data.groupDraw;

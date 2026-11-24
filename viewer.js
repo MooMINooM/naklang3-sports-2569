@@ -1,3 +1,4 @@
+import {showSimulationNotice} from './simulation-notice.js?v=20261124-score-test';
 import {schoolNameMarkup} from './school-label.js?v=20261123-wide-groups';
 import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
 import {readSports} from './sports-api.js?v=20261123-random-draw';
@@ -389,6 +390,7 @@ function venues() {
 }
 
 function render(syncSearch = true) {
+  showSimulationNotice(data, content);
   const route = readRoute();
   document.body.dataset.page = route.page;
   if (syncSearch) search.elements.query.value = route.query;
