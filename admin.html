@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
   <link rel="stylesheet" href="admin.css?v=20261123-combined">
-  <script type="module" src="admin.js?v=20261123-random-draw"></script>
+  <script type="module" src="admin.js?v=20261124-middle-20261123-random-draw"></script>
   <link rel="stylesheet" href="knockout.css?v=20261123-knockout">
   <link rel="stylesheet" href="school-label.css?v=20261123-wide-groups">
 </head>
@@ -53,6 +53,14 @@
             <p id="team-numbers-status" class="status" role="status"></p>
             <button type="submit" id="save-team-numbers" class="primary">บันทึกหมายเลขโรงเรียน</button>
           </div>
+        </form>
+      </section>
+
+      <section class="panel number-panel" aria-labelledby="middle-schools-title">
+        <form id="middle-schools-form">
+          <div class="number-panel-heading"><div><h2 id="middle-schools-title">โรงเรียนขยายโอกาสที่แข่งขันรุ่นมัธยม</h2><p>เลือก 4 โรงเรียนจากทะเบียนหมายเลขเดิม รายชื่อชุดนี้ใช้ร่วมกันทุกกีฬามัธยม ทั้งชายและหญิง ไม่รวมทีมโรงเรียนในรุ่นมัธยม</p></div><strong id="middle-schools-summary"></strong></div>
+          <div id="middle-school-fields" class="sport-number-preview"></div>
+          <div class="number-panel-footer"><p id="middle-schools-status" class="status" role="status"></p><button type="submit" id="save-middle-schools" class="primary">บันทึก 4 โรงเรียนขยายโอกาส</button></div>
         </form>
       </section>
 

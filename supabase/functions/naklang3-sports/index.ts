@@ -43,12 +43,12 @@ function roster(config) {
 
 function output(snapshot, canEdit) {
   const {config, matches, version} = snapshot;
-  const draw = numberedRoster_(matches, roster(config), config.teamNumbers);
+  const draw = numberedRoster_(matches, roster(config), config.teamNumbers, config.middleSchoolNumbers);
   const competition = competition_(matches.filter(match => canEdit || match.published), draw, canEdit);
   return {...competition, fields: FIELDS, schools: config.schools, settings: config.settings,
-    schoolLogos: config.schoolLogos, canEdit, formatVersion: 6, version,
+    schoolLogos: config.schoolLogos, canEdit, formatVersion: 7, version, middleSchoolsConfigured: config.middleSchoolNumbers?.length === 4,
     groupDrawInfo: config.groupDraw ? {seed: config.groupDraw.seed, createdAt: config.groupDraw.createdAt, events: config.groupDraw.events, after: config.groupDraw.after} : null,
-    ...(canEdit ? {teamNumbers: config.teamNumbers, groupDraw: config.groupDraw || null} : {})};
+    ...(canEdit ? {teamNumbers: config.teamNumbers, middleSchoolNumbers: config.middleSchoolNumbers || [], groupDraw: config.groupDraw || null} : {})};
 }
 
 function saveMatch(snapshot, input) {
@@ -84,8 +84,8 @@ function saveMatch(snapshot, input) {
   match.eventId = event.id;
   const after = prior ? before.map(row => row.id === match.id ? match : row) : [...before, match];
   const draw = roster(snapshot.config);
-  const oldDraw = numberedRoster_(before, draw, snapshot.config.teamNumbers);
-  const nextDraw = numberedRoster_(after, draw, snapshot.config.teamNumbers);
+  const oldDraw = numberedRoster_(before, draw, snapshot.config.teamNumbers, snapshot.config.middleSchoolNumbers);
+  const nextDraw = numberedRoster_(after, draw, snapshot.config.teamNumbers, snapshot.config.middleSchoolNumbers);
   const derived = competition_(after, nextDraw, true).matches.find(row => row.id === match.id);
   if (scored_(match) && !derived.ready) throw new Error('กรอกชื่อทีมและรอผลรอบก่อนหน้าให้ครบก่อนบันทึกผล');
   checkDependencies_(before, after, oldDraw, nextDraw);
@@ -102,8 +102,10 @@ function saveNumbers(snapshot, input) {
   const names = Object.values(next).filter(Boolean);
   if (new Set(names).size !== names.length) throw new Error('ชื่อโรงเรียนต้องไม่ซ้ำกัน');
   const draw = roster(config);
+  const selected = (config.middleSchoolNumbers || []).map(number => TEAM_NUMBERS.find(nextNumber => next[nextNumber] === config.teamNumbers[number])).filter(Boolean);
+  const nextMiddle = selected.length === 4 ? selected : [];
   checkDependencies_(snapshot.matches, snapshot.matches,
-    numberedRoster_(snapshot.matches, draw, config.teamNumbers), numberedRoster_(snapshot.matches, draw, next));
+    numberedRoster_(snapshot.matches, draw, config.teamNumbers, config.middleSchoolNumbers), numberedRoster_(snapshot.matches, draw, next, nextMiddle));
   const logos = {...config.schoolLogos};
   for (const number of TEAM_NUMBERS) {
     const name = next[number];
@@ -118,6 +120,7 @@ function saveNumbers(snapshot, input) {
     logos[name] = url.href;
   }
   config.teamNumbers = next;
+  config.middleSchoolNumbers = nextMiddle;
   config.schoolLogos = logos;
   return true;
 }
@@ -132,8 +135,22 @@ function saveDraw(snapshot, input) {
   }
   snapshot.config.roster[draw.key] = order.join(',');
   checkDependencies_(snapshot.matches, snapshot.matches,
-    numberedRoster_(snapshot.matches, oldRoster, snapshot.config.teamNumbers),
-    numberedRoster_(snapshot.matches, roster(snapshot.config), snapshot.config.teamNumbers));
+    numberedRoster_(snapshot.matches, oldRoster, snapshot.config.teamNumbers, snapshot.config.middleSchoolNumbers),
+    numberedRoster_(snapshot.matches, roster(snapshot.config), snapshot.config.teamNumbers, snapshot.config.middleSchoolNumbers));
+  return true;
+}
+
+function saveMiddleSchools(snapshot, input) {
+  const numbers = input?.numbers;
+  if (!Array.isArray(numbers) || numbers.length !== 4 || new Set(numbers).size !== 4 ||
+      numbers.some(number => !TEAM_NUMBERS.includes(number) || !snapshot.config.teamNumbers[number])) {
+    throw new Error('เลือกโรงเรียนขยายโอกาสให้ครบ 4 โรงเรียนและไม่ซ้ำกัน');
+  }
+  const draw = roster(snapshot.config);
+  checkDependencies_(snapshot.matches, snapshot.matches,
+    numberedRoster_(snapshot.matches, draw, snapshot.config.teamNumbers, snapshot.config.middleSchoolNumbers),
+    numberedRoster_(snapshot.matches, draw, snapshot.config.teamNumbers, numbers));
+  snapshot.config.middleSchoolNumbers = [...numbers];
   return true;
 }
 
@@ -157,7 +174,7 @@ Deno.serve(async request => {
     const body = await request.text();
     if (body.length > 32768) throw new Error('ข้อมูลคำขอมีขนาดใหญ่เกินไป');
     const message = JSON.parse(body);
-    if (!['read','save','saveDraw','saveTeamNumbers','randomizeGroups'].includes(message.action)) throw new Error('คำสั่งไม่ถูกต้อง');
+    if (!['read','save','saveDraw','saveTeamNumbers','saveMiddleSchools','randomizeGroups'].includes(message.action)) throw new Error('คำสั่งไม่ถูกต้อง');
     const snapshot = await rpc('sports_naklang3_snapshot', {p_import_id: importId});
     const canEdit = await authorized(message.key, snapshot.admin_key_hash);
     if (message.action === 'read') {
@@ -170,6 +187,7 @@ Deno.serve(async request => {
     if (message.action === 'save') value = saveMatch(snapshot, message.match);
     if (message.action === 'saveDraw') value = saveDraw(snapshot, message.draw);
     if (message.action === 'saveTeamNumbers') value = saveNumbers(snapshot, message.teams);
+    if (message.action === 'saveMiddleSchools') value = saveMiddleSchools(snapshot, message.middleSchools);
     if (message.action === 'randomizeGroups') value = randomizeGroups(snapshot);
     const resolved = output(snapshot, true);
     const teams = snapshot.teams.map(team => {

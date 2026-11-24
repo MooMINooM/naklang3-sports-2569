@@ -31,3 +31,5 @@ export const saveDraw = (key, draw) => send({action: 'saveDraw', key, draw});
 export const saveTeamNumbers = (key, teams) => send({action: 'saveTeamNumbers', key, teams});
 
 export const randomizeGroups = key => send({action: 'randomizeGroups', key});
+
+export const saveMiddleSchools = (key, middleSchools) => send({action: 'saveMiddleSchools', key, middleSchools});

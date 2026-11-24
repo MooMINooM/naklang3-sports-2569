@@ -180,14 +180,16 @@ function slots_(event){
  return ROSTER_SLOTS.filter(slot=>used.has(slot));
 }
 
-function numberedRoster_(matches,roster,teamNumbers){
+function numberedRoster_(matches,roster,teamNumbers,middleSchoolNumbers=[]){
  if(!teamNumbers)return roster;
  const result=new Map();
  for(const [key,event] of events_(matches)){
    const slots=slots_(event);
    if(slots.length>TEAM_NUMBERS.length)throw new Error('รายการมีเลขทีมเกินจำนวนที่กำหนด');
-   const savedNumbers=roster.get(key)?.numbers;
-   const numbers=Object.fromEntries(slots.map((slot,i)=>[slot,savedNumbers?.[slot]||TEAM_NUMBERS[i]]));
+   const isMiddle=event[0].level==='middle';
+   const savedNumbers=isMiddle?null:roster.get(key)?.numbers;
+   const selected=Array.isArray(middleSchoolNumbers)&&middleSchoolNumbers.length===4?middleSchoolNumbers:[];
+   const numbers=Object.fromEntries(slots.map((slot,i)=>[slot,isMiddle?(selected[i]||''):(savedNumbers?.[slot]||TEAM_NUMBERS[i])]));
    const entries=event[0].level!=='middle'?sportTeamNumbers(teamNumbers,event[0].sport):TEAM_NUMBERS.map(number=>({number,school:teamNumbers[number]||''}));
    const schools=Object.fromEntries(entries.map(entry=>[entry.number,entry.school]));
    if(savedNumbers&&(new Set(Object.values(numbers)).size!==slots.length||Object.values(numbers).some(number=>!Object.hasOwn(schools,number))))throw new Error('เลขทีมในผลสุ่มสายไม่ครบหรือซ้ำกัน');
@@ -214,7 +216,7 @@ function competition_(matches,roster,canEdit){
    const {sport,level,type}=event[0];
    const seeds=seedGroups_(event,draw);
    const named=label=>{const slot=slotOf_(label);return slot?draw[slot]||'':label;};
-   const display=label=>{const number=draw.numbers?.[slotOf_(label)];return number?'ทีม '+number:label;};
+   const display=label=>{const slot=slotOf_(label),number=draw.numbers?.[slot];return number?'ทีม '+number:level==='middle'&&slot?'รอกำหนดโรงเรียนขยายโอกาส '+slot:label;};
    if(canEdit&&slots.length)draws.push({key,sport,level,type,slots,numbers:draw.numbers||{},teams:Object.fromEntries(slots.map(slot=>[slot,draw[slot]||''])),tieOrder:String(draw.tieOrder||'')});
    if(seeds.wildcard)qualifiers.push({sport,level,type,group:seeds.wildcard.group,team:named(seeds.wildcard.label)||display(seeds.wildcard.label)});
    else if(seeds.pendingTie)qualifiers.push({sport,level,type,pendingTie:true});

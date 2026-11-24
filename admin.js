@@ -1,7 +1,7 @@
 import {schoolNameMarkup} from './school-label.js?v=20261123-wide-groups';
 import {sportTeamNumbers} from './supabase/functions/naklang3-sports/team-numbering.js?v=20261123-combined';
 import {knockoutMarkup} from './knockout.js?v=20261123-knockout';
-import {readSports, saveMatch, saveDraw, saveTeamNumbers, randomizeGroups} from './sports-api.js?v=20261123-random-draw';
+import {readSports, saveMatch, saveDraw, saveTeamNumbers, saveMiddleSchools, randomizeGroups} from './sports-api.js?v=20261124-middle-schools';
 import {
   SPORTS, LEVELS, TYPES, STAGES, DAYS, escapeHtml as esc, hasScore, duration,
   minutes, clock, ordered, fieldName, options, blank, usesSets, setResult,
@@ -37,6 +37,7 @@ let clearSets = false;
 let numberRows = [];
 let numberPrevious = {};
 let numbersDirty = false;
+let middleDirty = false;
 const setGrid = byId('set-grid');
 setGrid.innerHTML = '<div></div><strong id="set-team-home">ทีมที่ 1</strong><strong id="set-team-away">ทีมที่ 2</strong>' + [1, 2, 3].map(set => '<div class="set-label">เซต ' + set + '</div>' +
   ['home', 'away'].map((side, i) => '<input data-set type="number" min="0" max="999" name="' + side + 'Set' + set +
@@ -59,6 +60,7 @@ function render() {
   workspace.hidden = !key;
   if (!key) return;
   if (!numbersDirty) renderTeamNumbers();
+  if (!middleDirty) renderMiddleSchools();
   const drawInfo = data.groupDraw;
   byId('group-draw-summary').textContent = drawInfo ? 'สุ่มสายแล้ว ' + drawInfo.events + ' รายการ · คู่โรงเรียนร่วมสายหลากหลาย ' + drawInfo.before.distinctPairs + ' → ' + drawInfo.after.distinctPairs + '/' + drawInfo.after.possiblePairs + ' คู่ · คู่เดิมร่วมสายสูงสุด ' + drawInfo.after.maxPairMeetings + ' รายการ · รหัส ' + drawInfo.seed : 'ยังไม่ได้สุ่มกระจายสาย';
 
@@ -566,4 +568,35 @@ byId('randomize-groups').addEventListener('click', async () => {
   } finally {
     busy = button.disabled = false;
   }
+});
+
+function renderMiddleSchools() {
+  const selected = data.middleSchoolNumbers || [];
+  const choices = Object.fromEntries(teamNumbers.filter(number => data.teamNumbers?.[number]).map(number =>
+    [number, 'ทีม ' + number + ' · ' + data.teamNumbers[number]]));
+  byId('middle-school-fields').innerHTML = Array.from({length: 4}, (_, i) =>
+    '<label>ช่องแข่งขันมัธยม ' + (i + 1) + '<select name="middle-' + i + '" required>' +
+      options(choices, selected[i] || '', 'เลือกโรงเรียนขยายโอกาส') + '</select></label>').join('');
+  byId('middle-schools-summary').textContent = selected.length === 4 ? 'กำหนดครบ 4 โรงเรียนแล้ว' : 'ยังไม่ได้กำหนดโรงเรียนขยายโอกาส';
+  byId('save-middle-schools').disabled = data.formatVersion < 7;
+}
+byId('middle-schools-form').addEventListener('change', () => { middleDirty = true; });
+byId('middle-schools-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (busy || !key) return;
+  if (numbersDirty) { status('middle-schools-status', 'บันทึกหมายเลขโรงเรียนก่อนเลือกโรงเรียนขยายโอกาส', true); return; }
+  const values = new FormData(event.currentTarget);
+  const numbers = Array.from({length: 4}, (_, i) => String(values.get('middle-' + i) || ''));
+  if (numbers.some(number => !data.teamNumbers?.[number]) || new Set(numbers).size !== 4) {
+    status('middle-schools-status', 'เลือกโรงเรียนขยายโอกาสให้ครบ 4 โรงเรียนและไม่ซ้ำกัน', true); return;
+  }
+  busy = true;
+  const button = byId('save-middle-schools'); button.disabled = true;
+  byId('middle-school-fields').inert = true;
+  try {
+    await saveMiddleSchools(key, {numbers});
+    data = await readSports(key); middleDirty = false; render();
+    status('middle-schools-status', 'บันทึกแล้ว รายชื่อและโลโก้ทุกรายการมัธยมใช้เฉพาะ 4 โรงเรียนนี้');
+  } catch (error) { status('middle-schools-status', error.message, true); }
+  finally { busy = false; button.disabled = false; byId('middle-school-fields').inert = false; }
 });
