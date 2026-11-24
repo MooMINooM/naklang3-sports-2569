@@ -3,21 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>จัดการแข่งขัน · สนามกลาง นากลาง 3</title>
-  <link rel="stylesheet" href="admin.css?v=20261123-combined">
-  <script type="module" src="admin.js?v=20261124-score-test"></script>
-  <link rel="stylesheet" href="knockout.css?v=20261123-knockout">
+  <title>บันทึกผลการแข่งขัน · สนามกลาง นากลาง 3</title>
+  <link rel="stylesheet" href="admin.css?v=20261124-results-ui">
+  <script type="module" src="admin.js?v=20261124-results-ui"></script>
   <link rel="stylesheet" href="school-label.css?v=20261123-wide-groups">
 </head>
 <body>
-  <header class="top">
-    <a href="./" class="brand"><span aria-hidden="true">๓</span>สนามกลาง นากลาง 3</a>
-    <a href="./">ดูหน้าผู้ชม</a>
-  </header>
-  <main>
+  <a class="skip" href="#main-content">ข้ามไปยังเนื้อหา</a>
+  <header class="top"><div class="top-inner">
+    <a href="./" class="brand"><span class="brand-mark" aria-hidden="true">🏆</span><span>กีฬานักเรียน นากลาง 3<small>ศูนย์บันทึกผลการแข่งขัน · ปีการศึกษา 2569</small></span></a>
+    <a href="./" class="viewer-link">หน้าผู้ชม</a>
+  </div></header>
+  <main id="main-content">
     <section id="login-panel" class="login">
-      <h1>เข้าสู่หน้าผู้จัด</h1>
-      <p>จัดตารางสนาม บันทึกผล และเผยแพร่คู่แข่งขัน</p>
+      <div class="login-illustration" aria-hidden="true"></div>
+      <span class="eyebrow">สำหรับผู้จัดการแข่งขัน</span>
+      <h1>พร้อมบันทึกผล<br>ข้างสนาม</h1>
+      <p>กรอกคะแนน สรุปผู้ชนะ และส่งทีมเข้ารอบในที่เดียว</p>
       <form id="login-form">
         <label for="key">รหัสผู้จัดการแข่งขัน</label>
         <input type="password" id="key" name="key" autocomplete="current-password" required>
@@ -27,19 +29,25 @@
     </section>
     <section id="workspace" hidden>
       <div class="workspace-header">
-        <div><h1>จัดการแข่งขัน</h1><p id="summary"></p></div>
-        <div class="actions">
-          <button type="button" id="refresh">โหลดข้อมูลใหม่</button>
-          <button type="button" id="logout">ออกจากระบบ</button>
-          <button type="button" id="open-team-numbers">กำหนดหมายเลขโรงเรียน</button>
-          <button type="button" id="open-knockout">รอบ 4 ทีมและรอบชิง</button>
-          <button type="button" id="randomize-groups">สุ่มสายแบบกระจายคู่แข่ง</button>
-          <button type="button" id="open-draw">ตัดสินอันดับเมื่อเสมอ</button>
-          <button type="button" id="new-match" class="primary">เพิ่มคู่แข่งขัน</button>
-        </div>
+        <div><span class="eyebrow">ศูนย์จัดการแข่งขัน</span><h1>บันทึกผลการแข่งขัน</h1><p>ทุกผลการแข่งขัน ส่งต่อความสนุกถึงหน้าผู้ชม</p><p id="summary"></p></div>
+        <div class="header-actions"><button type="button" id="refresh">โหลดข้อมูลใหม่</button><button type="button" id="logout" class="text-button">ออกจากระบบ</button></div>
       </div>
-      <p id="group-draw-summary" class="status"></p>
-      <p id="workspace-status" class="status" role="status"></p>
+      <nav class="workspace-tabs" aria-label="งานของผู้จัด">
+        <button type="button" data-workspace="results" aria-pressed="true">บันทึกผล</button>
+        <button type="button" id="open-knockout" data-workspace="knockout" aria-pressed="false">รอบรองฯ และรอบชิง</button>
+        <button type="button" data-workspace="settings" aria-pressed="false">จัดการทีมและตั้งค่า</button>
+      </nav>
+      <div id="results-overview" class="admin-metrics" aria-label="สรุปการบันทึกผล">
+        <button type="button" class="admin-metric pending" data-status-filter="pending"><span class="metric-icon" aria-hidden="true">✎</span><span><span>พร้อมลงผล</span><strong id="metric-pending">0</strong><small>คู่แข่งขัน</small></span></button>
+        <button type="button" class="admin-metric completed" data-status-filter="completed"><span class="metric-icon" aria-hidden="true">✓</span><span><span>บันทึกแล้ว</span><strong id="metric-completed">0</strong><small>คู่แข่งขัน</small></span></button>
+        <button type="button" class="admin-metric waiting" data-status-filter="waiting"><span class="metric-icon" aria-hidden="true">◷</span><span><span>รอคู่แข่งขัน</span><strong id="metric-waiting">0</strong><small>คู่แข่งขัน</small></span></button>
+        <button type="button" class="admin-metric total" data-status-filter=""><span class="metric-icon" aria-hidden="true">🏆</span><span><span>รายการทั้งหมด</span><strong id="metric-total">0</strong><small>คู่แข่งขัน</small></span></button>
+      </div>
+      <p id="workspace-status" class="status toast" role="status" tabindex="-1"></p>
+      <div id="settings-view" hidden>
+        <div class="settings-heading"><h2>จัดการทีมและการแข่งขัน</h2><p>กำหนดโรงเรียน หมายเลขทีม และเงื่อนไขการแข่งขัน</p></div>
+        <div class="settings-tools"><button type="button" id="open-team-numbers">กำหนดหมายเลขโรงเรียน</button><button type="button" id="open-draw">ตัดสินอันดับเมื่อเสมอ</button><button type="button" id="new-match">เพิ่มคู่แข่งขัน</button><button type="button" id="randomize-groups">สุ่มสายแบบกระจายคู่แข่ง</button></div>
+        <details class="draw-details"><summary>ข้อมูลการจัดสาย</summary><p id="group-draw-summary" class="status"></p></details>
       <section id="team-numbers-panel" class="panel number-panel" aria-labelledby="team-numbers-title">
         <form id="team-numbers-form">
           <div class="number-panel-heading">
@@ -64,23 +72,21 @@
         </form>
       </section>
 
-      <section class="panel">
-        <div class="filters">
-          <label>แสดงรอบ <select id="round-filter"><option value="">คู่แข่งขันทั้งหมด</option><option value="knockout">รอบ 4 ทีมและรอบชิง</option><option value="group">รอบแบ่งกลุ่ม / พบกันหมด</option></select></label>
-          <label>รุ่น <select id="level-filter"></select></label>
-          <label>ประเภท <select id="type-filter"></select></label>
-          <label>วันแข่งขัน <select id="day-filter"></select></label>
-          <label>กีฬา <select id="sport-filter"></select></label>
-          <label>การเผยแพร่
-            <select id="published-filter">
-              <option value="">ทั้งหมด</option><option value="published">เผยแพร่แล้ว</option><option value="draft">ฉบับร่าง</option>
-            </select>
-          </label>
+      </div>
+      <section id="results-view" aria-labelledby="results-title">
+        <div class="results-title"><div><h2 id="results-title">เลือกคู่แข่งขันเพื่อกรอกผล</h2><p id="list-summary"></p></div><button type="button" id="reset-filters" class="text-button">ล้างตัวกรอง</button></div>
+        <div class="sport-tabs" role="group" aria-label="เลือกชนิดกีฬา">
+          <button type="button" data-sport-filter="" aria-pressed="true">ทุกกีฬา</button><button type="button" class="football" data-sport-filter="football" aria-pressed="false"><span aria-hidden="true">⚽</span> ฟุตบอล</button><button type="button" class="volleyball" data-sport-filter="volleyball" aria-pressed="false"><span aria-hidden="true">🏐</span> วอลเลย์บอล</button><button type="button" class="takraw" data-sport-filter="takraw" aria-pressed="false"><span class="sport-ball" aria-hidden="true"></span> ตะกร้อ</button><button type="button" class="petanque" data-sport-filter="petanque" aria-pressed="false"><span class="sport-ball" aria-hidden="true"></span> เปตอง</button>
         </div>
-        <div class="results-guide">
-          <strong>บันทึกผลการแข่งขัน</strong>
-          <span>ฟุตบอลกรอกประตู · วอลเลย์บอลและตะกร้อกรอกแต้มรายเซต</span>
-          <a href="./#standings">ดูตารางคะแนนฟุตบอล</a>
+        <select id="sport-filter" aria-label="ชนิดกีฬา" hidden></select>
+        <div class="filter-panel">
+          <label class="match-search">ค้นหาคู่แข่งขัน<input type="search" id="match-search" placeholder="ชื่อโรงเรียน หรือรหัสคู่ เช่น FUB-01" autocomplete="off"></label>
+          <div class="filters">
+            <label>วันแข่งขัน<select id="day-filter"></select></label><label>รุ่น<select id="level-filter"></select></label><label>ประเภท<select id="type-filter"></select></label>
+            <label>รอบแข่งขัน<select id="round-filter"><option value="">ทุกรอบ</option><option value="group">แบ่งกลุ่ม / พบกันหมด</option><option value="knockout">รอบรองฯ และรอบชิง</option><option value="semi">รอบรองชนะเลิศ</option><option value="third">ชิงอันดับ 3</option><option value="final">ชิงชนะเลิศ</option></select></label>
+            <label>สถานะผล<select id="score-status-filter"><option value="pending" selected>พร้อมลงผล</option><option value="completed">บันทึกแล้ว</option><option value="waiting">รอคู่แข่งขัน</option><option value="">ทุกสถานะ</option></select></label>
+          </div>
+          <details class="extra-filters"><summary>ตัวกรองการเผยแพร่</summary><label>การเผยแพร่<select id="published-filter"><option value="">ทั้งหมด</option><option value="published">เผยแพร่แล้ว</option><option value="draft">ฉบับร่าง</option></select></label></details>
         </div>
         <div id="matches"></div>
       </section>
@@ -88,9 +94,9 @@
   </main>
   <dialog id="match-dialog">
     <form id="match-form">
-      <h2 id="form-title"></h2>
+      <div class="dialog-heading"><div><span class="eyebrow">บันทึกจากข้างสนาม</span><h2 id="form-title"></h2></div><button type="button" id="close-match" class="icon-button" aria-label="ปิดหน้ากรอกผล">×</button></div>
       <div id="match-context" class="match-context" hidden>
-        <strong id="match-context-teams"></strong>
+        <div id="match-context-teams" class="score-team-header"></div>
         <p id="match-context-details"></p>
         <button type="button" id="assign-from-score" hidden>กำหนดหมายเลขโรงเรียน</button>
       </div>
@@ -107,23 +113,25 @@
         <label>รอบแข่งขัน <select name="stage" required></select></label>
         <label id="group-field">สาย <select name="group"><option value="A">กลุ่ม A</option><option value="B">กลุ่ม B</option><option value="C">กลุ่ม C</option></select></label>
       </fieldset>
-      <div id="single-scores" class="form-grid">
-        <label id="single-home"><span></span><input name="homeScore" type="number" min="0" max="999"></label>
-        <label id="single-away"><span></span><input name="awayScore" type="number" min="0" max="999"></label>
+      <div id="single-scores" class="single-score-grid">
+        <div class="single-score-control"><label for="home-score" id="single-home"><span>ประตูทีมที่ 1</span></label><div class="score-stepper"><button type="button" data-score-step="homeScore:-1" aria-label="ลดคะแนนทีมที่ 1">−</button><input id="home-score" name="homeScore" type="number" inputmode="numeric" min="0" max="999" step="1"><button type="button" data-score-step="homeScore:1" aria-label="เพิ่มคะแนนทีมที่ 1">+</button></div></div>
+        <div class="single-score-control"><label for="away-score" id="single-away"><span>ประตูทีมที่ 2</span></label><div class="score-stepper"><button type="button" data-score-step="awayScore:-1" aria-label="ลดคะแนนทีมที่ 2">−</button><input id="away-score" name="awayScore" type="number" inputmode="numeric" min="0" max="999" step="1"><button type="button" data-score-step="awayScore:1" aria-label="เพิ่มคะแนนทีมที่ 2">+</button></div></div>
       </div>
       <fieldset id="set-scores" hidden>
-        <legend>แต้มรายเซต · ชนะ 2 ใน 3 เซต</legend>
+        <legend>แต้มรายเซต</legend><p class="set-help">ชนะ 2 ใน 3 เซต · ระบบรวมเซตและระบุผู้ชนะให้</p>
         <div class="set-grid" id="set-grid"></div>
-        <button id="clear-sets" type="button">ล้างผลรายเซต</button>
+        <p class="keyboard-hint">กด Enter เพื่อไปช่องถัดไป</p>
       </fieldset>
       <div id="tie-field" hidden><label>ผู้ชนะกรณีตัดสินเมื่อคะแนนเท่ากัน <select name="tieWinner"></select></label></div>
+      <div id="score-preview" class="score-preview" aria-live="polite"></div>
       <p id="score-hint" class="status" role="status"></p>
+      <button type="button" id="clear-result" class="text-button danger">ล้างผลคู่นี้</button>
       <datalist id="schools"></datalist>
       <label class="publish" id="publish-match"><input name="published" type="checkbox"> แสดงคู่นี้ในหน้าผู้ชม</label>
       <p id="form-status" class="status" role="status"></p>
       <div class="actions form-actions">
         <button type="button" id="cancel-match">ยกเลิก</button>
-        <button type="submit" id="save-match" class="primary">บันทึกคู่แข่งขัน</button>
+        <button type="submit" id="save-match" class="primary">บันทึกผล</button><button type="submit" id="save-next" class="primary save-next" hidden>บันทึกและกรอกคู่ถัดไป</button>
       </div>
     </form>
   </dialog>
